@@ -1,5 +1,6 @@
 ![GitHub top language](https://img.shields.io/github/languages/top/maayanhd/SafeTube) ![GitHub pull requests](https://img.shields.io/github/issues-pr-raw/maayanhd/SafeTube?logo=GitHub)
-![SafeTube-MainLogo](https://user-images.githubusercontent.com/48455448/119765860-a49fd780-bebc-11eb-967d-1ebe8770a734.png)
+![SafeTube-MainLogo](https://user-images.githubusercontent.com/48455448/119765860-a49fd780-bebc-11eb-967d-1ebe8770a734.png
+)
 ![GitHub Contributors Image](https://contrib.rocks/image?repo=maayanhd/SafeTube)
 
 # SafeTube
