@@ -1,0 +1,82 @@
+header {
+  font-size: 2rem;
+  min-height: 20vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.playlist-input {
+  min-width: 70vh;
+}
+.playlist-url-button {
+  min-width: 12vh;
+  min-height: 5vh;
+}
+form {
+  display: flex;
+  justify-content: center;
+}
+
+.playerBox {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 197px;
+}
+.hiddenPlayerBox {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  visibility: hidden;
+}
+#playlistTable {
+  display: inline-block;
+  overflow-y: scroll;
+  max-height: 360px;
+}
+#hiddenPlaylistTable {
+  display: inline-block;
+  overflow-y: scroll;
+  max-height: 360px;
+  visibility: hidden;
+}
+.test {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#videoDescriptionTextArea {
+  justify-content: center;
+  align-items: center;
+  display: block;
+  width: 640px;
+  height: 100px;
+  overflow: auto;
+}
+#hiddenVideoDescriptionTextArea {
+  justify-content: center;
+  align-items: center;
+  display: block;
+  width: 640px;
+  height: 100px;
+  visibility: hidden;
+}
+.videoDescription {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+button.link {
+  background: none;
+  border: none;
+  width: 70px;
+  max-height: 80px;
+  overflow: hidden;
+}
+.suggestedImg {
+  max-height: 1000px;
+  max-width: 90px;
+}
+.suggestedVideo:hover {
+  background-color: lightblue;
+}
