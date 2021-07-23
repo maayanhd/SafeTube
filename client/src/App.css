@@ -16,13 +16,34 @@ form {
   display: flex;
   justify-content: center;
 }
+.channelDetails{
+  margin-right: 50px;
+  margin-bottom: 120px;
+  display: inline-block;
 
+  max-height: 260px;
+  width:300px;
+}
+.channelDetailsHidden{
+  margin-right: 50px;
+  margin-bottom: 300px;
+  width: 300px;
+  overflow-y:auto;
+  visibility: hidden;
+}
+.dataLabel{
+  display: inline-block;
+  min-width:100px;
+  
+}
 .playerBox {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-left: 197px;
+  margin-right: 170px;
+
 }
+
 .hiddenPlayerBox {
   display: flex;
   justify-content: center;
@@ -30,7 +51,7 @@ form {
   visibility: hidden;
 }
 #playlistTable {
-  display: inline-block;
+  display: inline-block ;
   overflow-y: scroll;
   max-height: 360px;
 }
@@ -69,7 +90,7 @@ form {
 button.link {
   background: none;
   border: none;
-  width: 70px;
+  width: 150px;
   max-height: 80px;
   overflow: hidden;
 }
@@ -79,4 +100,47 @@ button.link {
 }
 .suggestedVideo:hover {
   background-color: lightblue;
+}
+.videoDetails{
+
+  width: 640px;
+}
+.centerDetails{
+  display: flex;
+  justify-content: center;
+  margin-right: 97px;
+}
+.videoDetailsHidden{
+  visibility: hidden;
+}
+.videoDetails .left{
+  float: left;
+}
+.videoDetails .right{
+  float:right;
+  display: inline-flex;
+}
+.greenRatingVisual{
+  height: 20px;
+  width: 20px;
+  background-color: greenyellow;
+  margin-top: -2px;
+}
+.orangeRatingVisual{
+  height: 20px;
+  width: 20px;
+  background-color: orange;
+  margin-top: -2px;
+}
+.likeBar{
+  display:inline-block;
+  height: 15px;
+  background-color: #2be225ef;
+  margin-top: -2px;
+}
+.disLikeBar{
+  display:inline-block;
+  height: 15px;
+  background-color: #ED254E;
+  margin-top: -2px;
 }

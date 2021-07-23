@@ -1,67 +1,69 @@
-import React, {useEffect,useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactPlayer from 'react-player/youtube'
+import ChannelDetails from './ChannelDetails';
 
 import SuggestedVideo from './SuggestedVideo';
-import VideoInPlaylist from './VideoInPlaylist';
 
 
 
-const PlayerAndPlaylist =({currentVideoId, setCurrentVideoId,currentVideoIndexInPlaylist,
-    setCurrentVideoIndexInPlaylist,videoPlaylist, playBoxVisual,suggestedPlaylistVideos,
-    setSuggestedPlaylistVideos, suggestedVideosVisual}) =>{
-    
+const PlayerAndPlaylist = ({ currentVideoId, setCurrentVideoId, currentVideoIndexInPlaylist,
+    setCurrentVideoIndexInPlaylist, videoPlaylist, playBoxVisual, suggestedPlaylistVideos,
+    setSuggestedPlaylistVideos, suggestedVideosVisual, channelDetailsDisplay }) => {
+
     let suggestedVids = [];
 
-    const incVideoIndex=()=>{
-        setCurrentVideoIndexInPlaylist(currentVideoIndexInPlaylist+1);
+    const incVideoIndex = () => {
+        setCurrentVideoIndexInPlaylist(currentVideoIndexInPlaylist + 1);
     }
-    
-    useEffect(()=>{
-        console.log("hi"); 
-        if(videoPlaylist.length > currentVideoIndexInPlaylist){   
-                
+
+    useEffect(() => {
+
+        if (videoPlaylist.length > currentVideoIndexInPlaylist) {
+
             setCurrentVideoId(videoPlaylist[currentVideoIndexInPlaylist].id);
         }
-    },[videoPlaylist,currentVideoIndexInPlaylist])
+    }, [videoPlaylist, currentVideoIndexInPlaylist])
 
-    useEffect(()=>{
-        console.log("hi2");
-        if(videoPlaylist.length > 1){         
-            for(var i = 0; i < videoPlaylist.length; i++){
-                suggestedVids.push(<SuggestedVideo 
-                     imgURL={videoPlaylist[i].imgURL} VideoID = {videoPlaylist[i].id} 
-                     setCurrentVideoId={setCurrentVideoId} videoName={videoPlaylist[i].videoName}
-                     />
+    useEffect(() => {
+        if (videoPlaylist.length > 1) {
+            for (var i = 0; i < videoPlaylist.length; i++) {
+                suggestedVids.push(<SuggestedVideo
+                    imgURL={videoPlaylist[i].imgURL} VideoID={videoPlaylist[i].id}
+                    setCurrentVideoId={setCurrentVideoId} videoName={videoPlaylist[i].videoName} currentVideoIndexInPlaylist={currentVideoIndexInPlaylist}
+                    setCurrentVideoIndexInPlaylist={setCurrentVideoIndexInPlaylist} videoPlaylist={videoPlaylist}
+                />
                 );
             }
             setSuggestedPlaylistVideos(suggestedVids);
         }
-    },[videoPlaylist])
+    }, [videoPlaylist])
 
-    return(
-            
-            <div className={playBoxVisual}> 
-                <ReactPlayer
-                url={"https://www.youtube.com/embed/"+currentVideoId}
+    return (
+
+        <div className={playBoxVisual}>
+            <ChannelDetails videoPlaylist={videoPlaylist} currentVideoIndexInPlaylist={currentVideoIndexInPlaylist} channelDetailsDisplay={channelDetailsDisplay} />
+            <ReactPlayer
+                url={"https://www.youtube.com/embed/" + currentVideoId}
                 controls={true}
                 onEnded={incVideoIndex}
-                />
-                <table id={suggestedVideosVisual}>
-                  <tr>
-                      <th>Playlist videos</th>
-                      <th></th>
-                  </tr>
+                width="700px"
+            />
+            <table id={suggestedVideosVisual}>
+                <tr>
+                    <th>Playlist videos</th>
+                    <th></th>
+                </tr>
 
-                      {suggestedPlaylistVideos.map((r) => (
-                          
-                              <tr>{r}</tr>
-                          
-                        ))}     
-                  
-                </table>
-            </div>
+                {suggestedPlaylistVideos.map((r) => (
+
+                    <tr>{r}</tr>
+
+                ))}
+
+            </table>
+        </div>
     );
-    
+
 }
 
 export default PlayerAndPlaylist;
