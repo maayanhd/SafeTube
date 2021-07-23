@@ -1,0 +1,47 @@
+{
+	"name": "microservice-liveupdater",
+	"version": "0.0.6",
+	"description": "Fetches streamers & Updates their online/offline status",
+	"main": "index.js",
+	"scripts": {
+		"start": "SET NODE_ENV=production & node -r dotenv/config index.js",
+		"dev": "SET NODE_ENV=development & node -r dotenv/config index.js",
+		"debug": "node --nolazy --inspect-brk=9229 -r dotenv/config index.js",
+		"test": "jest --testTimeout=20000 --detectOpenHandles --verbose --forceExit",
+		"test:watch": "jest --watch",
+		"coverage": "jest --coverage"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/maayanhd/SafeTube.git"
+	},
+	"author": "",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/maayanhd/SafeTube"
+	},
+	"homepage": "https://github.com/maayanhd/SafeTube",
+	"dependencies": {
+		"bee-queue": "^1.2.3",
+		"cors": "^2.8.5",
+		"dotenv": "^8.6.0",
+		"express": "^4.17.1",
+		"express-validator": "^6.6.0",
+		"get-urls": "^9.2.1",
+		"googleapis": "^55.0.0",
+		"jsdom": "^16.3.0",
+		"moment": "^2.27.0",
+		"mongoose": "^5.13.3",
+		"morgan": "^1.10.0",
+		"node-fetch": "^2.6.0",
+		"request": "^2.88.2",
+		"winston": "^3.3.3",
+		"xml-js": "^1.6.11",
+		"youtube-captions-scraper": "^1.0.3",
+		"youtube-dl-exec": "^1.2.0"
+	},
+	"devDependencies": {
+		"jest": "^26.4.0",
+		"supertest": "^4.0.2"
+	}
+}

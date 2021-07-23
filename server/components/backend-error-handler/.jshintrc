@@ -1,0 +1,13 @@
+{
+	"camelcase": true,
+	"freeze": true,
+	"latedef": true,
+	"leanswitch": true,
+	"maxlen": 200,
+	"newcap": true,
+	"nocomma": true,
+	"undef": true,
+	"unused": true,
+	"node": true,
+	"esversion": 9
+}
