@@ -16,7 +16,7 @@ const { errorHandler } = require('./components/backend-error-handler');
 	app.use(express.json());
 	app.use(errorHandler);
 
-	app.use('/api/v1/liveUpdater/youtube', youtube);
+	app.use('/api/v1/youtube', youtube);
 })();
 
 module.exports = app;

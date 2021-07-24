@@ -62,8 +62,8 @@ const saveSubtitlesToDB = asyncHandler(async (subtitles)=>{
  * @param {Number} updateIteration the last update iteration
  * @param {String} platformName
  */
-// const upsertYoutubeStreamers = asyncHandler(async (req, res) => {//
-const upsertYoutubeStreamers = asyncHandler(async (inputUrl) => {//
+	const upsertYoutubeStreamers = asyncHandler(async (req, res) => {//
+// const upsertYoutubeStreamers = asyncHandler(async (inputUrl) => {//
 	const subtitleModel = await Database.subtitles();
 	let videoData = {}
 	try {
@@ -128,18 +128,32 @@ const upsertYoutubeStreamers = asyncHandler(async (inputUrl) => {//
 	return;
 });
 
-
+const getTranscript = asyncHandler(async (req, res) => {
+	console.log(req);
+	// const subtitleModel = await Database.subtitles();
+	// const id = req.head
+	// let result = await subtitleModel.find({}).select({id : 1, parsedSubtitles : 1});
+	// res.send(result);
+	// return result;
+});
+const getAllTranscripts = asyncHandler(async (req, res) => {
+	const subtitleModel = await Database.subtitles();
+	let result = await subtitleModel.find({}).select({id : 1, parsedSubtitles : 1});
+	res.send(result);
+	return result;
+});
 
 (async()=>{
 	setTimeout(async () => {
-		const foo = [1, 2, 3];
-		const [n] = foo;
-		console.log(n);
-
+		// const foo = [1, 2, 3];
+		// const [n] = foo;
+		// console.log(n);
+		// console.log(await getAllTranscripts());
+		
 		// console.log("starting");
 		// upsertYoutubeStreamers("https://www.youtube.com/embed/gEX_RS3_IzI");
 		// initYouTubeAPI();
-// 
+		// 
 		// console.log("blabla");
 		// const streamersModel = await Database.streamers();
 		// let streamer = new streamersModel({name : "MoryZz",platform:{name : "twitch",id: 1234}})
@@ -151,5 +165,7 @@ const upsertYoutubeStreamers = asyncHandler(async (inputUrl) => {//
 // updateStreamers: updateStreamers,
 module.exports = {
 	upsertYoutubeStreamers: upsertYoutubeStreamers,
+	getAllTranscripts: getAllTranscripts,
+	getTranscript: getTranscript
 	
 };
