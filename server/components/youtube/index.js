@@ -13,6 +13,7 @@ const xmlParser = require('xml-js');
 const { exit } = require('process');
 const { count } = require('console');
 const { default: youtubeDlExec } = require('youtube-dl-exec');
+const { json } = require('express');
 
 const initYouTubeAPI = () => {
 	return google.youtube({
@@ -129,12 +130,18 @@ const saveSubtitlesToDB = asyncHandler(async (subtitles)=>{
 });
 
 const getTranscript = asyncHandler(async (req, res) => {
-	console.log(req);
-	// const subtitleModel = await Database.subtitles();
-	// const id = req.head
-	// let result = await subtitleModel.find({}).select({id : 1, parsedSubtitles : 1});
-	// res.send(result);
-	// return result;
+	const videoId = req.query.videoid ?? null;
+	if(!videoId){
+		res.status(500).send('No videoId header field');
+		return;
+	}
+	const subtitleModel = await Database.subtitles();
+	let result = await subtitleModel.findOne({id : videoId}).select({id : 1, parsedSubtitles : 1});
+	if(result == null){
+		res.status(500).send(`No video found by the ID ${videoId}`)
+		return;
+	}
+	res.send(result);
 });
 const getAllTranscripts = asyncHandler(async (req, res) => {
 	const subtitleModel = await Database.subtitles();
@@ -143,8 +150,30 @@ const getAllTranscripts = asyncHandler(async (req, res) => {
 	return result;
 });
 
+const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
+	let result = {status : 500 , data : null};
+	const resultsFromPlaylist = 50;
+	const currentPlaylistID = req.query.playlistid ?? null;
+	 if(!currentPlaylistID){
+		 result.data = 'No playlist header field'
+		 res.send(result);
+		 return;
+	 }
+	const playlist = await fetch(
+		"https://www.googleapis.com/youtube/v3/playlistItems?maxResults=" + resultsFromPlaylist + "&playlistId=" + currentPlaylistID + "&part=snippet&fields=items%2Fid%2C%20items%2Fsnippet(title%2Cdescription%2CvideoOwnerChannelTitle%2Cthumbnails(medium)%2CresourceId)&key=AIzaSyD5aoCjGplRER2cPriT28Osh7McTSW6QDk",
+		{ method: "GET" })
+	.then(respones => respones.json());
+	if (playlist.items && playlist.items.length > 0){
+		result.status = 200
+		result.data = playlist;
+	}else{
+		result.data = `No data found under the playlist ${currentPlaylistID}`;
+	}
+	res.send(result);
+});
 (async()=>{
 	setTimeout(async () => {
+		// await fetchYoutubePlaylist("https://www.youtube.com/watch?v=lVKk__uuIxo&list=PLF7tUDhGkiCk_Ne30zu7SJ9gZF9R9ZruE")
 		// const foo = [1, 2, 3];
 		// const [n] = foo;
 		// console.log(n);
@@ -166,6 +195,7 @@ const getAllTranscripts = asyncHandler(async (req, res) => {
 module.exports = {
 	upsertYoutubeStreamers: upsertYoutubeStreamers,
 	getAllTranscripts: getAllTranscripts,
-	getTranscript: getTranscript
+	getTranscript: getTranscript,
+	fetchYoutubePlaylist: fetchYoutubePlaylist
 	
 };
