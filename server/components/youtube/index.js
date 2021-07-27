@@ -13,6 +13,7 @@ const xmlParser = require('xml-js');
 const { exit } = require('process');
 const { count } = require('console');
 const { default: youtubeDlExec } = require('youtube-dl-exec');
+const { json } = require('express');
 
 const initYouTubeAPI = () => {
 	return google.youtube({
@@ -62,7 +63,7 @@ const saveSubtitlesToDB = asyncHandler(async (subtitles)=>{
  * @param {Number} updateIteration the last update iteration
  * @param {String} platformName
  */
-// const upsertYoutubeStreamers = asyncHandler(async (req, res) => {//
+	// const upsertYoutubeStreamers = asyncHandler(async (req, res) => {//
 const upsertYoutubeStreamers = asyncHandler(async (inputUrl) => {//
 	const subtitleModel = await Database.subtitles();
 	let videoData = {}
@@ -81,9 +82,9 @@ const upsertYoutubeStreamers = asyncHandler(async (inputUrl) => {//
 	} catch (error) {
 		console.log("123\n");
 		console.log(error.stderr);
-		if(error.stderr.includes("inappropriate")){
-			saveSubtitlesToDB({})
-		}
+		// if(error.stderr.includes("inappropriate")){
+		// 	saveSubtitlesToDB({})
+		// }
 		throw(error.stderr);
 		console.log("123\n");
 
@@ -123,23 +124,82 @@ const upsertYoutubeStreamers = asyncHandler(async (inputUrl) => {//
 		}
 	}
 	
-	res.send('OK!');
+	// res.send('OK!');
 	// res.send(videoData);
 	return;
 });
 
+const getTranscripts = async (videoIdArray) =>{
+	const subtitleModel = await Database.subtitles();
+	if (videoIdArray.length == 1) {
+		return subtitleModel.findOne({id : videoId}).select({id : 1, parsedSubtitles : 1});
+	}
 
+	return subtitleModel.find({id : { $in : videoIdArray}}).select({id : 1, parsedSubtitles : 1});
+};
+const getTranscriptEndpoint = asyncHandler(async (req, res) => {
+	const videoId = req.query.videoid ?? null;
+	if(!videoId){
+		res.status(500).send('No videoId header field');
+		return;
+	}
+	let result = await getTranscripts([videoId])
+	if(result == null){
+		res.status(500).send(`No video found by the ID ${videoId}`)
+		return;
+	}
+	res.send(result);
+});
+const getAllTranscripts = asyncHandler(async (req, res) => {
+	const subtitleModel = await Database.subtitles();
+	let result = await subtitleModel.find({}).select({id : 1, parsedSubtitles : 1});
+	res.send(result);
+	return result;
+});
 
+const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
+	let result = {status : 500 , data : null};
+	const resultsFromPlaylist = 50;
+	const currentPlaylistID = req.query.playlistid ?? null;
+	 if(!currentPlaylistID){
+		 result.data = 'No playlist header field'
+		 res.send(result);
+		 return;
+	 }
+	const playlist = await fetch(
+		"https://www.googleapis.com/youtube/v3/playlistItems?maxResults=" + resultsFromPlaylist + "&playlistId=" + currentPlaylistID + "&part=snippet&fields=items%2Fid%2C%20items%2Fsnippet(title%2Cdescription%2CvideoOwnerChannelTitle%2Cthumbnails(medium)%2CresourceId)&key=AIzaSyD5aoCjGplRER2cPriT28Osh7McTSW6QDk",
+		{ method: "GET" })
+	.then(respones => respones.json());
+	let playlistVideoIds = playlist.items.map(e=>e.snippet.resourceId.videoId);
+	let promiseArr = [];
+	for (let index = 0; index < playlistVideoIds.length; index++) {
+		const element = playlistVideoIds[index];
+		promiseArr.push(upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${element}`));
+	}
+	await Promise.all(promiseArr);
+	// console.log(await getTranscripts(playlistVideoIds));
+
+	// if (playlist.items && playlist.items.length > 0){
+	// 	result.status = 200
+	// 	result.data = playlist;
+	// }else{
+	// 	result.data = `No data found under the playlist ${currentPlaylistID}`;
+	// }
+	// res.send(result);
+	
+});
 (async()=>{
 	setTimeout(async () => {
-		const foo = [1, 2, 3];
-		const [n] = foo;
-		console.log(n);
-
+		// await fetchYoutubePlaylist("https://www.youtube.com/watch?v=lVKk__uuIxo&list=PLF7tUDhGkiCk_Ne30zu7SJ9gZF9R9ZruE")
+		// const foo = [1, 2, 3];
+		// const [n] = foo;
+		// console.log(n);
+		// console.log(await getAllTranscripts());
+		
 		// console.log("starting");
-		// upsertYoutubeStreamers("https://www.youtube.com/embed/gEX_RS3_IzI");
+		// await upsertYoutubeStreamers("https://www.youtube.com/watch?v=5sTWbG3n8wU");
 		// initYouTubeAPI();
-// 
+		// 
 		// console.log("blabla");
 		// const streamersModel = await Database.streamers();
 		// let streamer = new streamersModel({name : "MoryZz",platform:{name : "twitch",id: 1234}})
@@ -151,5 +211,8 @@ const upsertYoutubeStreamers = asyncHandler(async (inputUrl) => {//
 // updateStreamers: updateStreamers,
 module.exports = {
 	upsertYoutubeStreamers: upsertYoutubeStreamers,
+	getAllTranscripts: getAllTranscripts,
+	getTranscriptEndpoint: getTranscriptEndpoint,
+	fetchYoutubePlaylist: fetchYoutubePlaylist
 	
 };
