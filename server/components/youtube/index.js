@@ -63,8 +63,8 @@ const saveSubtitlesToDB = asyncHandler(async (subtitles)=>{
  * @param {Number} updateIteration the last update iteration
  * @param {String} platformName
  */
-	const upsertYoutubeStreamers = asyncHandler(async (req, res) => {//
-// const upsertYoutubeStreamers = asyncHandler(async (inputUrl) => {//
+	// const upsertYoutubeStreamers = asyncHandler(async (req, res) => {//
+const upsertYoutubeStreamers = asyncHandler(async (inputUrl) => {//
 	const subtitleModel = await Database.subtitles();
 	let videoData = {}
 	try {
@@ -82,9 +82,9 @@ const saveSubtitlesToDB = asyncHandler(async (subtitles)=>{
 	} catch (error) {
 		console.log("123\n");
 		console.log(error.stderr);
-		if(error.stderr.includes("inappropriate")){
-			saveSubtitlesToDB({})
-		}
+		// if(error.stderr.includes("inappropriate")){
+		// 	saveSubtitlesToDB({})
+		// }
 		throw(error.stderr);
 		console.log("123\n");
 
@@ -124,19 +124,26 @@ const saveSubtitlesToDB = asyncHandler(async (subtitles)=>{
 		}
 	}
 	
-	res.send('OK!');
+	// res.send('OK!');
 	// res.send(videoData);
 	return;
 });
 
-const getTranscript = asyncHandler(async (req, res) => {
+const getTranscripts = async (videoIdArray) =>{
+	const subtitleModel = await Database.subtitles();
+	if (videoIdArray.length == 1) {
+		return subtitleModel.findOne({id : videoId}).select({id : 1, parsedSubtitles : 1});
+	}
+
+	return subtitleModel.find({id : { $in : videoIdArray}}).select({id : 1, parsedSubtitles : 1});
+};
+const getTranscriptEndpoint = asyncHandler(async (req, res) => {
 	const videoId = req.query.videoid ?? null;
 	if(!videoId){
 		res.status(500).send('No videoId header field');
 		return;
 	}
-	const subtitleModel = await Database.subtitles();
-	let result = await subtitleModel.findOne({id : videoId}).select({id : 1, parsedSubtitles : 1});
+	let result = await getTranscripts([videoId])
 	if(result == null){
 		res.status(500).send(`No video found by the ID ${videoId}`)
 		return;
@@ -163,13 +170,23 @@ const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
 		"https://www.googleapis.com/youtube/v3/playlistItems?maxResults=" + resultsFromPlaylist + "&playlistId=" + currentPlaylistID + "&part=snippet&fields=items%2Fid%2C%20items%2Fsnippet(title%2Cdescription%2CvideoOwnerChannelTitle%2Cthumbnails(medium)%2CresourceId)&key=AIzaSyD5aoCjGplRER2cPriT28Osh7McTSW6QDk",
 		{ method: "GET" })
 	.then(respones => respones.json());
-	if (playlist.items && playlist.items.length > 0){
-		result.status = 200
-		result.data = playlist;
-	}else{
-		result.data = `No data found under the playlist ${currentPlaylistID}`;
+	let playlistVideoIds = playlist.items.map(e=>e.snippet.resourceId.videoId);
+	let promiseArr = [];
+	for (let index = 0; index < playlistVideoIds.length; index++) {
+		const element = playlistVideoIds[index];
+		promiseArr.push(upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${element}`));
 	}
-	res.send(result);
+	await Promise.all(promiseArr);
+	// console.log(await getTranscripts(playlistVideoIds));
+
+	// if (playlist.items && playlist.items.length > 0){
+	// 	result.status = 200
+	// 	result.data = playlist;
+	// }else{
+	// 	result.data = `No data found under the playlist ${currentPlaylistID}`;
+	// }
+	// res.send(result);
+	
 });
 (async()=>{
 	setTimeout(async () => {
@@ -180,7 +197,7 @@ const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
 		// console.log(await getAllTranscripts());
 		
 		// console.log("starting");
-		// upsertYoutubeStreamers("https://www.youtube.com/embed/gEX_RS3_IzI");
+		// await upsertYoutubeStreamers("https://www.youtube.com/watch?v=5sTWbG3n8wU");
 		// initYouTubeAPI();
 		// 
 		// console.log("blabla");
@@ -195,7 +212,7 @@ const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
 module.exports = {
 	upsertYoutubeStreamers: upsertYoutubeStreamers,
 	getAllTranscripts: getAllTranscripts,
-	getTranscript: getTranscript,
+	getTranscriptEndpoint: getTranscriptEndpoint,
 	fetchYoutubePlaylist: fetchYoutubePlaylist
 	
 };

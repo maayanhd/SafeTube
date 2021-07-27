@@ -1,7 +1,7 @@
 {
-	"name": "microservice-liveupdater",
+	"name": "safetube-server",
 	"version": "0.0.6",
-	"description": "Fetches streamers & Updates their online/offline status",
+	"description": "Fetches subtitles from db",
 	"main": "index.js",
 	"scripts": {
 		"start": "SET NODE_ENV=production & node -r dotenv/config index.js",
