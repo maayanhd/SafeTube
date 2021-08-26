@@ -2,9 +2,11 @@ import React from 'react';
 
 import { useEffect, useState } from 'react';
 
+import CircularProgress from '@material-ui/core/CircularProgress';
+
 const KEY = 'AIzaSyCuVFHDltJZeTbesYt0J2eodWwwfqkpELA';
 
-const resultsFromPlaylist = "10";
+const resultsFromPlaylist = "50";
 
 let currentPlaylist = [];
 
@@ -22,13 +24,12 @@ class video {
     }
 }
 
-const Form = ({ setCurrentVideoIndexInPlaylist, getIDFromURL, setVideoPlaylist, setPlayBoxVisual, setInputText, inputText, firstVideoURL, setFirstVideoURL, setSuggestedVideosVisual, setChannelDetailsDisplay, setvideoDetailsDisplay }) => {
+const Form = ({ setCurrentVideoIndexInPlaylist, getIDFromURL, setVideoPlaylist, setPlayBoxVisual, setInputText, inputText, firstVideoURL, setFirstVideoURL, setSuggestedVideosVisual, setChannelDetailsDisplay, setvideoDetailsDisplay, loading, setLoading}) => {
 
     const [currentPlaylistID, setCurrentPlaylistID] = useState("");
 
     let startOfPlayListIDIndex = 0;
     let endOfPlayListID = 0;
-    let privateVideoAmount;
 
     const inputTextHandler = (e) => {
         setInputText(e.target.value);
@@ -49,13 +50,14 @@ const Form = ({ setCurrentVideoIndexInPlaylist, getIDFromURL, setVideoPlaylist, 
         }
     }
 
+
     useEffect(() => {
         if (validURL()) {
             setPlayBoxVisual("playerBox");
-            if (firstVideoURL.length > 0) {
+/*             if (firstVideoURL.length > 0 ) {
                 setChannelDetailsDisplay("channelDetails");
                 setvideoDetailsDisplay("videoDetails");
-            }
+            }   */
             //this finds the start and end of playlist ID
             startOfPlayListIDIndex = firstVideoURL.indexOf('list=') + 5;
             endOfPlayListID = firstVideoURL.length;
@@ -65,7 +67,7 @@ const Form = ({ setCurrentVideoIndexInPlaylist, getIDFromURL, setVideoPlaylist, 
             }
             if (firstVideoURL.includes("list=")) {
                 setCurrentPlaylistID(firstVideoURL.substring(startOfPlayListIDIndex, endOfPlayListID));
-                setSuggestedVideosVisual("playlistTable");
+                
             }
             else {
                 placeSingleVideoIntoPlaylist();
@@ -100,36 +102,41 @@ const Form = ({ setCurrentVideoIndexInPlaylist, getIDFromURL, setVideoPlaylist, 
 
     useEffect(() => {
         const handleSubmit = async () => {
+            setLoading(false);
             try {
-                const res = await fetch(
-                    "https://www.googleapis.com/youtube/v3/playlistItems?maxResults=" + resultsFromPlaylist + "&playlistId=" + currentPlaylistID + "&part=snippet&fields=items%2Fid%2C%20items%2Fsnippet(title%2Cdescription%2CvideoOwnerChannelTitle%2Cthumbnails(medium)%2CresourceId)&key=AIzaSyD5aoCjGplRER2cPriT28Osh7McTSW6QDk",
-                    { method: "GET" }
-                );
-                const data = await res.json(); // turns the reponse data to a json object
-                privateVideoAmount = 0;
-                for (var i = 0; i < data.items.length; i++) {
-                    if (data.items[i].snippet.title === "Private video") {
-                        privateVideoAmount++;
-                    }
-                }
-                currentPlaylist = [];
-                setVideoPlaylist([]);
-                for (var i = 0; i < Math.min(resultsFromPlaylist - "0", data.items.length - privateVideoAmount); i++) {
+                const res = await fetch("http://localhost:8082/api/v1/youtube/playlist?playlistid=" +currentPlaylistID, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        },               
+                });
+                const data = await res.json();
+                setLoading(true);
+                setChannelDetailsDisplay("channelDetails");
+                setvideoDetailsDisplay("videoDetails");
+                setSuggestedVideosVisual("playlistTable");
+                console.log(data);
+                for (var i = 0; i < Math.min(resultsFromPlaylist - "0", data.items.length); i++) {
                     let vid = new video(data.items[i].snippet.title, data.items[i].snippet.description, data.items[i].snippet.videoOwnerChannelTitle, data.items[i].snippet.thumbnails.medium.url, "7", data.items[i].snippet.resourceId.videoId);
                     currentPlaylist.push(vid);
                 }
                 setVideoPlaylist(currentPlaylist);
-            } catch (err) {
-                console.log(err);
+            } catch (error) {
+                console.log(error);
             }
         }
-        handleSubmit();
+        if(currentPlaylistID!=""){
+            handleSubmit();
+        }else{
+            setLoading(true);
+        }
+        
+        
     }, [currentPlaylistID]);
 
     const validURL = () => {
         return true;
     }
-
 
     return (
         <div>
@@ -138,6 +145,7 @@ const Form = ({ setCurrentVideoIndexInPlaylist, getIDFromURL, setVideoPlaylist, 
                 <button onClick={searchButtonHandler} className="playlist-url-button" type="submit">
                     <i className="fas fa-search"></i>
                 </button>
+                {loading ? (""):(<CircularProgress />)}
             </form>
         </div>
     );
