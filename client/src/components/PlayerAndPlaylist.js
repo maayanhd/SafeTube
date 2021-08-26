@@ -42,12 +42,12 @@ const PlayerAndPlaylist = ({ currentVideoId, setCurrentVideoId, currentVideoInde
 
         <div className={playBoxVisual}>
             <ChannelDetails videoPlaylist={videoPlaylist} currentVideoIndexInPlaylist={currentVideoIndexInPlaylist} channelDetailsDisplay={channelDetailsDisplay} />
-            <ReactPlayer
+             <ReactPlayer
                 url={"https://www.youtube.com/embed/" + currentVideoId}
                 controls={true}
                 onEnded={incVideoIndex}
                 width="700px"
-            />
+            /> 
             <table id={suggestedVideosVisual}>
                 <tr>
                     <th>Playlist videos</th>

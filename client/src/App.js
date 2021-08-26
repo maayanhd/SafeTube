@@ -35,6 +35,7 @@ function App() {
     setCurrentVideoId={setCurrentVideoId} videoName="dummyVideo" />]);
   const [channelDetailsDisplay, setChannelDetailsDisplay] = useState("channelDetailsHidden");
   const [videoDetailsDisplay, setvideoDetailsDisplay] = useState("videoDetailsHidden");
+  const [loading,setLoading] = useState(false);
 
 
 
@@ -51,6 +52,7 @@ function App() {
         setPlayBoxVisual={setPlayBoxVisual} firstVideoURL={firstVideoURL} setFirstVideoURL={setFirstVideoURL}
         setInputText={setInputText} inputText={inputText} setSuggestedVideosVisual={setSuggestedVideosVisual}
         setChannelDetailsDisplay={setChannelDetailsDisplay} setvideoDetailsDisplay={setvideoDetailsDisplay}
+        loading={loading} setLoading={setLoading}
       />
 
       <br></br><br></br>
