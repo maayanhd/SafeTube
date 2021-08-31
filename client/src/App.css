@@ -129,6 +129,12 @@ button.link {
   background-color: orange;
   margin-top: -2px;
 }
+.redRatingVisual {
+  height: 20px;
+  width: 20px;
+  background-color: red;
+  margin-top: -2px;
+}
 .likeBar {
   display: inline-block;
   height: 15px;
@@ -140,4 +146,30 @@ button.link {
   height: 15px;
   background-color: #ed254e;
   margin-top: -2px;
+}
+#validURLHidden {
+  visibility: hidden;
+}
+#validURLSeen {
+  color: red;
+  display: flex;
+  justify-content: center;
+}
+#playerVisualHidden {
+  display: none;
+}
+#badVideoIMG {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 360px;
+  width: 700px;
+}
+#badVideoIMGHidden {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 170px;
+  width: 700px;
+  display: none;
 }

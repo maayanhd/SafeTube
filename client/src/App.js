@@ -36,7 +36,9 @@ function App() {
   const [channelDetailsDisplay, setChannelDetailsDisplay] = useState("channelDetailsHidden");
   const [videoDetailsDisplay, setvideoDetailsDisplay] = useState("videoDetailsHidden");
   const [loading,setLoading] = useState(false);
-
+  const [validURL,setValidURL] = useState("validURLHidden");
+  const [playerVisual,setPlayerVisual] = useState("playerVisual");
+  const [currVideoIMG,setCurrVideoIMG] = useState("");
 
 
   return (
@@ -52,7 +54,7 @@ function App() {
         setPlayBoxVisual={setPlayBoxVisual} firstVideoURL={firstVideoURL} setFirstVideoURL={setFirstVideoURL}
         setInputText={setInputText} inputText={inputText} setSuggestedVideosVisual={setSuggestedVideosVisual}
         setChannelDetailsDisplay={setChannelDetailsDisplay} setvideoDetailsDisplay={setvideoDetailsDisplay}
-        loading={loading} setLoading={setLoading}
+        loading={loading} setLoading={setLoading} validURL={validURL} setValidURL={setValidURL}
       />
 
       <br></br><br></br>
@@ -64,6 +66,7 @@ function App() {
         currentVideoId={currentVideoId} setCurrentVideoId={setCurrentVideoId} suggestedPlaylistVideos={suggestedPlaylistVideos}
         setSuggestedPlaylistVideos={setSuggestedPlaylistVideos} suggestedVideosVisual={suggestedVideosVisual}
         channelDetailsDisplay={channelDetailsDisplay} setChannelDetailsDisplay={setChannelDetailsDisplay}
+        playerVisual={playerVisual} setPlayerVisual={setPlayerVisual} currVideoIMG={currVideoIMG} setCurrVideoIMG={setCurrVideoIMG}
       />
       <div className="centerDetails">
         <VideoNameAndRating
