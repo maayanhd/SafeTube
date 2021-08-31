@@ -27,6 +27,8 @@ const VideoNameAndRating = ({ videoDetailsDisplay, videoPlaylist, currentVideoIn
             setIconTitle("Video is suitable for kids.");
         } else if (ratingVisual === "orangeRatingVisual") {
             setIconTitle("Video may contain language not suitable for kids.");
+        }else{
+            setIconTitle("Video is not suitable for kids.");
         }
     }, [ratingVisual])
     useEffect(() => {
@@ -39,9 +41,11 @@ const VideoNameAndRating = ({ videoDetailsDisplay, videoPlaylist, currentVideoIn
             } else {
                 if (videoPlaylist[currentVideoIndexInPlaylist].rating > 6.5) {
                     setRatingVisual("orangeRatingVisual");
+                }else{
+                    setRatingVisual("redRatingVisual");
                 }
             }
-        }
+            }
     }, [videoPlaylist, currentVideoIndexInPlaylist]);
 
 

@@ -10,6 +10,7 @@ const resultsFromPlaylist = "50";
 
 let currentPlaylist = [];
 
+
 class video {
     constructor(videoName, description, channelName, imgURL, rating, id) {
         this.videoName = videoName;
@@ -24,12 +25,20 @@ class video {
     }
 }
 
-const Form = ({ setCurrentVideoIndexInPlaylist, getIDFromURL, setVideoPlaylist, setPlayBoxVisual, setInputText, inputText, firstVideoURL, setFirstVideoURL, setSuggestedVideosVisual, setChannelDetailsDisplay, setvideoDetailsDisplay, loading, setLoading}) => {
+const Form = ({ setCurrentVideoIndexInPlaylist, getIDFromURL, setVideoPlaylist, setPlayBoxVisual, setInputText, inputText, firstVideoURL
+    , setFirstVideoURL, setSuggestedVideosVisual, setChannelDetailsDisplay, setvideoDetailsDisplay, loading, setLoading, validURL, setValidURL}) => {
 
     const [currentPlaylistID, setCurrentPlaylistID] = useState("");
+    const [errMSG,setErrMSG] = useState("");
 
     let startOfPlayListIDIndex = 0;
     let endOfPlayListID = 0;
+    
+
+        const hidePlayer=()=>{
+            setPlayBoxVisual("hiddenPlayerBox");
+            setvideoDetailsDisplay("videoDetailsHidden");
+        }
 
     const inputTextHandler = (e) => {
         setInputText(e.target.value);
@@ -52,8 +61,9 @@ const Form = ({ setCurrentVideoIndexInPlaylist, getIDFromURL, setVideoPlaylist, 
 
 
     useEffect(() => {
-        if (validURL()) {
+        if (isURLValid()) {
             setPlayBoxVisual("playerBox");
+            setvideoDetailsDisplay("videoDetails");
 /*             if (firstVideoURL.length > 0 ) {
                 setChannelDetailsDisplay("channelDetails");
                 setvideoDetailsDisplay("videoDetails");
@@ -72,32 +82,34 @@ const Form = ({ setCurrentVideoIndexInPlaylist, getIDFromURL, setVideoPlaylist, 
             else {
                 placeSingleVideoIntoPlaylist();
                 setSuggestedVideosVisual("hiddenPlaylistTable");
+                
             }
         } else {
-            setPlayBoxVisual("hiddenPlayerBox");
+            hidePlayer();
         }
     }, [firstVideoURL]);
 
 
     const searchButtonHandler = (e) => {
         e.preventDefault();
-        let defaultURLString = inputText.toString();
-        defaultURLString = defaultURLString.replace('watch?v=', 'embed/');
-        if (defaultURLString.length !== 0) {
-            setFirstVideoURL(defaultURLString);
-            //this sets the currect video in playlist ( if user didnt start at the first video)
-            if (defaultURLString.includes("index=")) {
-                let startVidNumIndex = defaultURLString.indexOf("index=") + 6;
-                let endVidNumIndex = defaultURLString.length;
-                if (defaultURLString.substring(startVidNumIndex, endVidNumIndex).includes("&")) {
-                    endVidNumIndex = defaultURLString.indexOf("&", startVidNumIndex);
+            let defaultURLString = inputText.toString();
+            defaultURLString = defaultURLString.replace('watch?v=', 'embed/');
+            if (defaultURLString.length !== 0) {
+                setFirstVideoURL(defaultURLString);
+                //this sets the currect video in playlist ( if user didnt start at the first video)
+                if (defaultURLString.includes("index=")) {
+                    let startVidNumIndex = defaultURLString.indexOf("index=") + 6;
+                    let endVidNumIndex = defaultURLString.length;
+                    if (defaultURLString.substring(startVidNumIndex, endVidNumIndex).includes("&")) {
+                        endVidNumIndex = defaultURLString.indexOf("&", startVidNumIndex);
+                    }
+                    setCurrentVideoIndexInPlaylist(defaultURLString.substring(startVidNumIndex, endVidNumIndex) - "1");
+                } else {
+                    setCurrentVideoIndexInPlaylist(0);
                 }
-                setCurrentVideoIndexInPlaylist(defaultURLString.substring(startVidNumIndex, endVidNumIndex) - "1");
-            } else {
-                setCurrentVideoIndexInPlaylist(0);
+                setInputText("");
             }
-            setInputText("");
-        }
+        
     }
 
     useEffect(() => {
@@ -116,13 +128,24 @@ const Form = ({ setCurrentVideoIndexInPlaylist, getIDFromURL, setVideoPlaylist, 
                 setvideoDetailsDisplay("videoDetails");
                 setSuggestedVideosVisual("playlistTable");
                 console.log(data);
+                currentPlaylist=[];
                 for (var i = 0; i < Math.min(resultsFromPlaylist - "0", data.items.length); i++) {
-                    let vid = new video(data.items[i].snippet.title, data.items[i].snippet.description, data.items[i].snippet.videoOwnerChannelTitle, data.items[i].snippet.thumbnails.medium.url, "7", data.items[i].snippet.resourceId.videoId);
-                    currentPlaylist.push(vid);
+                    if(data.items[i].snippet.title !=="Private video"){
+                        
+                        let vid = new video(data.items[i].snippet.title, data.items[i].snippet.description,
+                             data.items[i].snippet.videoOwnerChannelTitle, data.items[i].snippet.thumbnails.medium.url,
+                              "7", data.items[i].snippet.resourceId.videoId);
+
+                        currentPlaylist.push(vid);
+                    }
                 }
+                currentPlaylist[1].rating="6";
                 setVideoPlaylist(currentPlaylist);
             } catch (error) {
                 console.log(error);
+                setValidURL("validURLSeen");
+                setErrMSG("Something went wrong.");  
+                hidePlayer();
             }
         }
         if(currentPlaylistID!=""){
@@ -134,10 +157,22 @@ const Form = ({ setCurrentVideoIndexInPlaylist, getIDFromURL, setVideoPlaylist, 
         
     }, [currentPlaylistID]);
 
-    const validURL = () => {
-        return true;
+    const isURLValid = () => {
+        console.log(firstVideoURL);
+        let valid = false;
+        if(firstVideoURL){
+            valid = firstVideoURL.startsWith('https://www.youtube.com/watch?v=') || firstVideoURL.startsWith('https://www.youtube.com/embed/') ;
+            console.log(valid);
+            if(valid){
+                setValidURL("validURLHidden");
+            }else{
+                setValidURL("validURLSeen");
+                setErrMSG("URL not valid.");                
+            }
+        }
+        return valid;
     }
-
+    
     return (
         <div>
             <form>
@@ -147,6 +182,7 @@ const Form = ({ setCurrentVideoIndexInPlaylist, getIDFromURL, setVideoPlaylist, 
                 </button>
                 {loading ? (""):(<CircularProgress />)}
             </form>
+            <div id={validURL}>{errMSG}</div>
         </div>
     );
 

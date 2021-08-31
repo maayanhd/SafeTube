@@ -8,7 +8,11 @@ import SuggestedVideo from './SuggestedVideo';
 
 const PlayerAndPlaylist = ({ currentVideoId, setCurrentVideoId, currentVideoIndexInPlaylist,
     setCurrentVideoIndexInPlaylist, videoPlaylist, playBoxVisual, suggestedPlaylistVideos,
-    setSuggestedPlaylistVideos, suggestedVideosVisual, channelDetailsDisplay }) => {
+    setSuggestedPlaylistVideos, suggestedVideosVisual, channelDetailsDisplay, playerVisual, setPlayerVisual,
+    currVideoIMG, setCurrVideoIMG}) => {
+
+
+    const [badVideoIMG,setBadVideoIMG] = useState("badVideoIMGHidden");    
 
     let suggestedVids = [];
 
@@ -19,8 +23,18 @@ const PlayerAndPlaylist = ({ currentVideoId, setCurrentVideoId, currentVideoInde
     useEffect(() => {
 
         if (videoPlaylist.length > currentVideoIndexInPlaylist) {
+            if(videoPlaylist[currentVideoIndexInPlaylist].rating >= "7"){
+                setCurrVideoIMG("");
+                setBadVideoIMG("badVideoIMGHidden");
+                setPlayerVisual("playerVisual");
+                setCurrentVideoId(videoPlaylist[currentVideoIndexInPlaylist].id);
+            }else{
+                setCurrVideoIMG(videoPlaylist[currentVideoIndexInPlaylist].imgURL);
+                setPlayerVisual("playerVisualHidden");
+                setBadVideoIMG("badVideoIMG");
+                setCurrentVideoId("8JN1RGtFm2o");
+            }
 
-            setCurrentVideoId(videoPlaylist[currentVideoIndexInPlaylist].id);
         }
     }, [videoPlaylist, currentVideoIndexInPlaylist])
 
@@ -42,12 +56,15 @@ const PlayerAndPlaylist = ({ currentVideoId, setCurrentVideoId, currentVideoInde
 
         <div className={playBoxVisual}>
             <ChannelDetails videoPlaylist={videoPlaylist} currentVideoIndexInPlaylist={currentVideoIndexInPlaylist} channelDetailsDisplay={channelDetailsDisplay} />
-             <ReactPlayer
-                url={"https://www.youtube.com/embed/" + currentVideoId}
-                controls={true}
-                onEnded={incVideoIndex}
-                width="700px"
-            /> 
+            <img id={badVideoIMG} src={currVideoIMG}></img>
+            <span id={playerVisual}>
+                <ReactPlayer
+                    url={"https://www.youtube.com/embed/" + currentVideoId}
+                    controls={true}
+                    onEnded={incVideoIndex}
+                    width="700px"
+                /> 
+            </span>
             <table id={suggestedVideosVisual}>
                 <tr>
                     <th>Playlist videos</th>
