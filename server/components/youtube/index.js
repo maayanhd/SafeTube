@@ -112,11 +112,16 @@ const upsertYoutubeStreamers = async (inputUrl) => {//
 };
 const getScoring = async (videoData) =>{
 	const url = "http://localhost:8081";
-	fetch(url, {
+	return fetch(url, {
     method: 'POST',
     body: JSON.stringify(videoData),
     headers: { 'Content-Type': 'application/json' }
-	}).then(res => res.json()).then(json => console.log(json));
+	}).then(res => res.text()).then(json => {
+		console.log("before");
+		console.log(json);
+		console.log("after");
+		return JSON.parse(json);
+	});
 
 	// await fetch(firstUrl).then(res => res.text()).then(res=> xmlParser.xml2json(res, {compact: true, spaces: 4}))
 };
