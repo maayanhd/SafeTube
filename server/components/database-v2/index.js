@@ -816,6 +816,7 @@ const streamers = async () => {
 	// }
 	// }
 };
+
 const subtitlesSchema = new mongoose.Schema(
 	{
 		like_count: {
@@ -867,6 +868,10 @@ const subtitlesSchema = new mongoose.Schema(
 		parsedSubtitles:{
 			type: Array,
 			default: null
+		},
+		view_count : {
+			type: Number,
+			default: 0,
 		},
 		scoring : {
 			type: mongoose.Schema.Types.Mixed,

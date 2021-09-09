@@ -7,20 +7,12 @@ const youtubedl = require('youtube-dl-exec')
 const fetch = require('node-fetch');
 const xmlParser = require('xml-js');
 
-
-
-
-const { exit } = require('process');
-const { count } = require('console');
-const { default: youtubeDlExec } = require('youtube-dl-exec');
-const { json } = require('express');
-
-const initYouTubeAPI = () => {
-	return google.youtube({
-		version: 'v3',
-		auth: 'AIzaSyCWQYCbkfQfSRxvakEBpqM8Z8CN2kD1Qvk',
-	});
-};
+// const initYouTubeAPI = () => {
+// 	return google.youtube({
+// 		version: 'v3',
+// 		auth: 'AIzaSyCWQYCbkfQfSRxvakEBpqM8Z8CN2kD1Qvk',
+// 	});
+// };
 
 /**
  * Handles online & offline streamers iteration number and schedule according to status
@@ -56,8 +48,11 @@ const saveSubtitlesToDB = asyncHandler(async (subtitles)=>{
 	console.log("trying to get scoring");
 	const scoring  = await getScoring(subtitles);
 	console.log(scoring);
+	if(scoring){
+		res.scoring = scoring;
+	}
 	res = new subtitleModel(res);
-	await res.save()
+	res.save()
 	console.log('saved');
 	return res;
   
@@ -68,7 +63,7 @@ const saveSubtitlesToDB = asyncHandler(async (subtitles)=>{
  * @param {String} platformName
  */
 	// const upsertYoutubeStreamers = asyncHandler(async (req, res) => {//
-const upsertYoutubeStreamers = asyncHandler(async (inputUrl) => {//
+const upsertYoutubeStreamers = async (inputUrl) => {//
 	const subtitleModel = await Database.subtitles();
 	let videoData = {}
 	try {
@@ -84,54 +79,37 @@ const upsertYoutubeStreamers = asyncHandler(async (inputUrl) => {//
 		})
 
 	} catch (error) {
-		console.log("123\n");
 		console.log(error.stderr);
-		// if(error.stderr.includes("inappropriate")){
-		// 	saveSubtitlesToDB({})
-		// }
-		throw(error.stderr);
-		console.log("123\n");
+		return;
 
 	}
 
-	let urls = null;
-	if(videoData.subtitles){
-		urls = videoData.subtitles.en ?? videoData.automatic_captions.en ?? null;
-	}
-	console.log(urls);
-	// // // ! DONE
-	if(urls){
-		urls = urls.filter(e=>e.ext.includes('srv'));
-		const firstUrl = urls[0].url;
-		let captionJson = await fetch(firstUrl).then(res => res.text()).then(res=> xmlParser.xml2json(res, {compact: true, spaces: 4}))
-		captionJson = JSON.parse(captionJson);
-		captionJson = cleanSubtitles(captionJson);
-		videoData.parsedSubtitles = captionJson;
-
-	}
-	// else{
-	// 	res.send('Somthing went wrong with fetching the urls');
-	// 	return;
-	// }
-	
-	// ! DONE
-	// console.log(videoData);
 	let blabla = await subtitleModel.findOne({id : videoData.id});
-	console.log(blabla);
-	if (!blabla) {
+	if (blabla == null) {
 		try {
-			await saveSubtitlesToDB(videoData);
+			let urls = null;
+			if(videoData.subtitles){
+				urls = videoData.subtitles.en ?? videoData.automatic_captions.en ?? null;
+			}
+			// // // ! DONE
+			if(urls){
+				urls = urls.filter(e=>e.ext.includes('srv'));
+				const firstUrl = urls[0].url;
+				let captionJson = await fetch(firstUrl).then(res => res.text()).then(res=> xmlParser.xml2json(res, {compact: true, spaces: 4}))
+				captionJson = JSON.parse(captionJson);
+				captionJson = cleanSubtitles(captionJson);
+				videoData.parsedSubtitles = captionJson;
+		
+			}
+			let videoObj = await saveSubtitlesToDB(videoData);
+			return videoObj;
 		} catch (error) {
 			console.log(error);
-			res.send('Somthing went wrong with saving to DB');
 			return;
 		}
 	}
-	
-	// res.send('OK!');
-	// res.send(videoData);
-	return;
-});
+	return blabla;
+};
 const getScoring = async (videoData) =>{
 	const url = "http://localhost:8081";
 	fetch(url, {
@@ -190,8 +168,7 @@ const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
 		const element = playlistVideoIds[index];
 		promiseArr.push(upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${element}`));
 	}
-	await Promise.all(promiseArr);
-	// console.log(await getTranscripts(playlistVideoIds));
+	promiseArr = await Promise.all(promiseArr);
 
 	if (playlist.items && playlist.items.length > 0){
 		result.status = 200
@@ -199,7 +176,8 @@ const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
 	}else{
 		result.data = `No data found under the playlist ${currentPlaylistID}`;
 	}
-	res.send(result);
+
+	res.send(promiseArr);
 	
 });
 (async()=>{
