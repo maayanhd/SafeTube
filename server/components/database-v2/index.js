@@ -867,8 +867,16 @@ const subtitlesSchema = new mongoose.Schema(
 		parsedSubtitles:{
 			type: Array,
 			default: null
+		},
+		scoring : {
+			type: mongoose.Schema.Types.Mixed,
+			default: {
+				bracket_count : 0,
+				contains_bad_language : true,
+				is_safe : false,
+				final_score : 6
+			},
 		}
-
 
 	},
 	{ timestamps: {}, }

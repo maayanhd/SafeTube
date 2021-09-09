@@ -52,6 +52,10 @@ const saveSubtitlesToDB = asyncHandler(async (subtitles)=>{
 		res[key] = subtitles[key];
 	  }
 	});
+	//Here
+	console.log("trying to get scoring");
+	const scoring  = await getScoring(subtitles);
+	console.log(scoring);
 	res = new subtitleModel(res);
 	await res.save()
 	console.log('saved');
@@ -128,6 +132,16 @@ const upsertYoutubeStreamers = asyncHandler(async (inputUrl) => {//
 	// res.send(videoData);
 	return;
 });
+const getScoring = async (videoData) =>{
+	const url = "http://localhost:8081";
+	fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(videoData),
+    headers: { 'Content-Type': 'application/json' }
+	}).then(res => res.json()).then(json => console.log(json));
+
+	// await fetch(firstUrl).then(res => res.text()).then(res=> xmlParser.xml2json(res, {compact: true, spaces: 4}))
+};
 
 const getTranscripts = async (videoIdArray) =>{
 	const subtitleModel = await Database.subtitles();
@@ -179,13 +193,13 @@ const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
 	await Promise.all(promiseArr);
 	// console.log(await getTranscripts(playlistVideoIds));
 
-	// if (playlist.items && playlist.items.length > 0){
-	// 	result.status = 200
-	// 	result.data = playlist;
-	// }else{
-	// 	result.data = `No data found under the playlist ${currentPlaylistID}`;
-	// }
-	// res.send(result);
+	if (playlist.items && playlist.items.length > 0){
+		result.status = 200
+		result.data = playlist;
+	}else{
+		result.data = `No data found under the playlist ${currentPlaylistID}`;
+	}
+	res.send(result);
 	
 });
 (async()=>{
