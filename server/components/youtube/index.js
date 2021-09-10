@@ -47,13 +47,23 @@ const saveSubtitlesToDB = asyncHandler(async (subtitles)=>{
 	});
 	//Here
 	console.log("trying to get scoring");
-	const scoring  = await getScoring(subtitles);
-	console.log(scoring);
-	if(scoring){
-		res.scoring = scoring;
+	let scoring = {};
+	if (subtitles.parsedSubtitles.length == 0) {
+        scoring = {
+            "bracket_count": 0,
+            "contains_bad_language": true,
+            "is_safe": false,
+            "final_score": 2
+        }
+	} else {
+		// scoring  = await getScoring(subtitles);
+		// console.log(scoring);
+		// if(scoring){
+		// 	res.scoring = scoring;
+		// }
 	}
 	res = new subtitleModel(res);
-	res.save()
+	await res.save()
 
 	console.log('saved');
 	return res;
@@ -80,7 +90,8 @@ const upsertYoutubeStreamers = async (inputUrl) => {//
 			youtubeSkipDashManifest: true,
 			referer: inputUrl
 		})
-
+		console.log("videoData\n");
+		console.log(videoData);
 	} catch (error) {
 		console.log(error.stderr);
 		return;
@@ -98,14 +109,22 @@ const upsertYoutubeStreamers = async (inputUrl) => {//
 			if(urls){
 				urls = urls.filter(e=>e.ext.includes('srv'));
 				const firstUrl = urls[0].url;
-				let captionJson = await fetch(firstUrl).then(res => res.text()).then(res=> xmlParser.xml2json(res, {compact: true, spaces: 4}))
-				captionJson = JSON.parse(captionJson);
-				captionJson = cleanSubtitles(captionJson);
-				videoData.parsedSubtitles = captionJson;
+				try {
+					let captionJson = await fetch(firstUrl).then(res => res.text()).then(res=> {
+						console.log("debug\n\n\n\n");
+						console.log(res);
+						return xmlParser.xml2json(res, {compact: true, spaces: 4})
+					})
+					captionJson = JSON.parse(captionJson);
+					captionJson = cleanSubtitles(captionJson);
+					videoData.parsedSubtitles = captionJson;
+				} catch (error) {
+					// console.log(error);
+					videoData.parsedSubtitles = [];					
+				}
 		
 			}
-			let videoObj = await saveSubtitlesToDB(videoData);
-			video = videoObj;
+			video = await saveSubtitlesToDB(videoData);
 		} catch (error) {
 			console.log(error);
 			return;
@@ -220,9 +239,9 @@ const appendRatePerChannel = async (videoObj) => {
 
 (async()=>{
 	setTimeout(async () => {
-		// const subtitleModel = await Database.subtitles();
-		// let x = await subtitleModel.find({'scoring.final_score' : {$gt :  6}});
-		// console.log(x.length);
+		const subtitleModel = await Database.subtitles();
+		let x = await subtitleModel.find({'title' : { "$regex": "Tyler", "$options": "i" }});
+		console.log(x.map(x=> x.id));
 		// x = x.map(x => x.scoring)
 		// await fetchYoutubePlaylist("https://www.youtube.com/watch?v=lVKk__uuIxo&list=PLF7tUDhGkiCk_Ne30zu7SJ9gZF9R9ZruE")
 		// const foo = [1, 2, 3];
