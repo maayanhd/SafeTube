@@ -36,11 +36,12 @@ const cleanSubtitles = (subtitles)=>{
 const saveSubtitlesToDB = asyncHandler(async (subtitles)=>{
 	const subtitleModel = await Database.subtitles();
 	const whiteList = Object.keys(subtitleModel.schema.obj);
+	const subtitlesKeys = Object.keys(subtitles)
 	let res = {};
 	// iterate over each keys of source
-	Object.keys(subtitles).forEach((key) => {
+	whiteList.forEach((key) => {
 	  // if whiteList contains the current key, add this key to res
-	  if (whiteList.indexOf(key) !== -1) {
+	  if (key != "thumbnail" || subtitlesKeys.indexOf(key) !== -1) {
 		res[key] = subtitles[key];
 	  }
 	});
@@ -83,9 +84,9 @@ const upsertYoutubeStreamers = async (inputUrl) => {//
 		return;
 
 	}
-
-	let blabla = await subtitleModel.findOne({id : videoData.id});
-	if (blabla == null) {
+	let video = await subtitleModel.findOne({id : videoData.id});
+	//Video not found in DB => parse subtitles and save to DB
+	if (video == null) {
 		try {
 			let urls = null;
 			if(videoData.subtitles){
@@ -102,13 +103,13 @@ const upsertYoutubeStreamers = async (inputUrl) => {//
 		
 			}
 			let videoObj = await saveSubtitlesToDB(videoData);
-			return videoObj;
+			video = videoObj;
 		} catch (error) {
 			console.log(error);
 			return;
 		}
 	}
-	return blabla;
+	return video;
 };
 const getScoring = async (videoData) =>{
 	const url = "http://localhost:8081";
@@ -117,13 +118,14 @@ const getScoring = async (videoData) =>{
     body: JSON.stringify(videoData),
     headers: { 'Content-Type': 'application/json' }
 	}).then(res => res.text()).then(json => {
-		console.log("before");
-		console.log(json);
-		console.log("after");
-		return JSON.parse(json);
+		let result = null;
+		try {
+			result = JSON.parse(json);
+		} catch (error) {
+			console.log("Bad result from scoring server\n" + error);
+		}
+		return result;
 	});
-
-	// await fetch(firstUrl).then(res => res.text()).then(res=> xmlParser.xml2json(res, {compact: true, spaces: 4}))
 };
 
 const getTranscripts = async (videoIdArray) =>{
@@ -167,26 +169,45 @@ const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
 		"https://www.googleapis.com/youtube/v3/playlistItems?maxResults=" + resultsFromPlaylist + "&playlistId=" + currentPlaylistID + "&part=snippet&fields=items%2Fid%2C%20items%2Fsnippet(title%2Cdescription%2CvideoOwnerChannelTitle%2Cthumbnails(medium)%2CresourceId)&key=AIzaSyD5aoCjGplRER2cPriT28Osh7McTSW6QDk",
 		{ method: "GET" })
 	.then(respones => respones.json());
+	//Verifing google api result is correct
+	if (playlist.items && playlist.items.length > 0){
+		result.status = 200
+		result.data = playlist;
+	}else{
+		result.data = `No data found under the playlist ${currentPlaylistID}`;
+		res.send(result);
+		return;
+	}
+
 	let playlistVideoIds = playlist.items.map(e=>e.snippet.resourceId.videoId);
 	let promiseArr = [];
 	for (let index = 0; index < playlistVideoIds.length; index++) {
 		const element = playlistVideoIds[index];
 		promiseArr.push(upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${element}`));
 	}
-	promiseArr = await Promise.all(promiseArr);
-
-	if (playlist.items && playlist.items.length > 0){
-		result.status = 200
-		result.data = playlist;
-	}else{
-		result.data = `No data found under the playlist ${currentPlaylistID}`;
-	}
-
-	res.send(promiseArr);
+	result = await Promise.all(promiseArr);
+	res.send(result);
 	
 });
+
+const fetchYoutubeVideo = asyncHandler(async (req, res) => {
+	const videoID = req.query.videoid ?? null;
+	let result = {status : 500 , data : null};
+	if(videoID) {
+		upsertResult = await upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${videoID}`);
+		if(upsertResult){
+			result = upsertResult; 
+		}
+	}
+	res.send(result);
+});
+
 (async()=>{
 	setTimeout(async () => {
+		// const subtitleModel = await Database.subtitles();
+		// let x = await subtitleModel.find({'scoring.final_score' : {$gt :  6}});
+		// console.log(x.length);
+		// x = x.map(x => x.scoring)
 		// await fetchYoutubePlaylist("https://www.youtube.com/watch?v=lVKk__uuIxo&list=PLF7tUDhGkiCk_Ne30zu7SJ9gZF9R9ZruE")
 		// const foo = [1, 2, 3];
 		// const [n] = foo;
@@ -197,7 +218,7 @@ const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
 		// await upsertYoutubeStreamers("https://www.youtube.com/watch?v=5sTWbG3n8wU");
 		// initYouTubeAPI();
 		// 
-		// console.log("blabla");
+		// console.log("video");
 		// const streamersModel = await Database.streamers();
 		// let streamer = new streamersModel({name : "MoryZz",platform:{name : "twitch",id: 1234}})
 		// await streamer.save();
@@ -205,11 +226,11 @@ const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
 	
 })();
 
-// updateStreamers: updateStreamers,
 module.exports = {
 	upsertYoutubeStreamers: upsertYoutubeStreamers,
 	getAllTranscripts: getAllTranscripts,
 	getTranscriptEndpoint: getTranscriptEndpoint,
-	fetchYoutubePlaylist: fetchYoutubePlaylist
+	fetchYoutubePlaylist: fetchYoutubePlaylist,
+	fetchYoutubeVideo: fetchYoutubeVideo
 	
 };

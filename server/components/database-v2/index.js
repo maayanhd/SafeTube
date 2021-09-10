@@ -835,6 +835,10 @@ const subtitlesSchema = new mongoose.Schema(
 			type: String,
 			required: true,
 		},
+		uploader : {
+			type: String,
+			required: true,
+		},
 		display_id: {
 			type: String,
 			required: true,
@@ -872,6 +876,10 @@ const subtitlesSchema = new mongoose.Schema(
 		view_count : {
 			type: Number,
 			default: 0,
+		},
+		thumbnail :  {
+			type: String,
+			default : null
 		},
 		scoring : {
 			type: mongoose.Schema.Types.Mixed,
