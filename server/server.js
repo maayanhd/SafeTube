@@ -13,6 +13,7 @@ const { errorHandler } = require('./components/backend-error-handler');
 	await Database.init(mongoServerUrl);
 
 	app.use(morgan(NODE_ENV === 'production' ? 'short' : 'dev'));
+	app.use(cors());
 	app.use(express.json());
 	app.use(errorHandler);
 
