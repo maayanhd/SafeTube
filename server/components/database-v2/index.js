@@ -889,11 +889,58 @@ const subtitlesSchema = new mongoose.Schema(
 				is_safe : false,
 				final_score : 6
 			},
+		},
+		channelScore : {
+			type: mongoose.Schema.Types.Mixed,
+			default: {
+				goodVideoCount :  0,
+				badVideoCount : 0
+		   },
 		}
 
 	},
 	{ timestamps: {}, }
 );
+// const channelSchema = new mongoose.Schema(
+// 	{
+// 		channel_id: {
+// 			type: String,
+// 			required: true,
+// 		},
+// 		id: {
+// 			type: String,
+// 			required: true,
+// 			index: { unique: true }
+// 		},
+// 		dislike_count: {
+// 			type: Number,
+// 			default: 0,
+// 		},
+// 		parsedSubtitles:{
+// 			type: Array,
+// 			default: null
+// 		},
+// 		view_count : {
+// 			type: Number,
+// 			default: 0,
+// 		},
+// 		thumbnail :  {
+// 			type: String,
+// 			default : null
+// 		},
+// 		scoring : {
+// 			type: mongoose.Schema.Types.Mixed,
+// 			default: {
+// 				bracket_count : 0,
+// 				contains_bad_language : true,
+// 				is_safe : false,
+// 				final_score : 6
+// 			},
+// 		}
+
+// 	},
+// 	{ timestamps: {}, }
+// );
 /**
  * Users model connection
  */

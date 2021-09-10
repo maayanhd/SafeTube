@@ -54,6 +54,7 @@ const saveSubtitlesToDB = asyncHandler(async (subtitles)=>{
 	}
 	res = new subtitleModel(res);
 	res.save()
+
 	console.log('saved');
 	return res;
   
@@ -66,7 +67,8 @@ const saveSubtitlesToDB = asyncHandler(async (subtitles)=>{
 	// const upsertYoutubeStreamers = asyncHandler(async (req, res) => {//
 const upsertYoutubeStreamers = async (inputUrl) => {//
 	const subtitleModel = await Database.subtitles();
-	let videoData = {}
+	let videoData = {};
+	
 	try {
 	
 		videoData = await youtubedl(inputUrl, {
@@ -85,6 +87,7 @@ const upsertYoutubeStreamers = async (inputUrl) => {//
 
 	}
 	let video = await subtitleModel.findOne({id : videoData.id});
+	
 	//Video not found in DB => parse subtitles and save to DB
 	if (video == null) {
 		try {
@@ -92,7 +95,6 @@ const upsertYoutubeStreamers = async (inputUrl) => {//
 			if(videoData.subtitles){
 				urls = videoData.subtitles.en ?? videoData.automatic_captions.en ?? null;
 			}
-			// // // ! DONE
 			if(urls){
 				urls = urls.filter(e=>e.ext.includes('srv'));
 				const firstUrl = urls[0].url;
@@ -109,6 +111,7 @@ const upsertYoutubeStreamers = async (inputUrl) => {//
 			return;
 		}
 	}
+	video["channelScore"] =  await appendRatePerChannel(video);
 	return video;
 };
 const getScoring = async (videoData) =>{
@@ -186,6 +189,7 @@ const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
 		promiseArr.push(upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${element}`));
 	}
 	result = await Promise.all(promiseArr);
+	// console.log(result[0]);
 	res.send(result);
 	
 });
@@ -201,6 +205,18 @@ const fetchYoutubeVideo = asyncHandler(async (req, res) => {
 	}
 	res.send(result);
 });
+
+const appendRatePerChannel = async (videoObj) => { 
+	const subtitleModel = await Database.subtitles();
+	let channelVideos = await subtitleModel.find({channel_id : videoObj.channel_id});
+	let goodVideoCount = channelVideos.filter((videoObj)=>{
+		return videoObj.scoring.final_score >= 6;
+	  }).length;
+	return {
+		goodVideoCount :  goodVideoCount,
+		badVideoCount : channelVideos.length - goodVideoCount
+    }
+};
 
 (async()=>{
 	setTimeout(async () => {
