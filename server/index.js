@@ -1,6 +1,7 @@
 const app = require('./server.js');
 const server = require('http').Server(app);
 const logger = require('./components/logger');
+const cors = require('cors');
 
 const port = process.env.PORT || 8082;
 
@@ -10,7 +11,7 @@ app.listen(port, () => {
 		division: 'SafeTube-Backend',
 	});
 });
-
+app.use(cors());
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (error, promise) => {
 	logger.error({ message: error, division: 'SafeTube-Backend' });

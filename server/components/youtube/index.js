@@ -55,13 +55,22 @@ const saveSubtitlesToDB = asyncHandler(async (subtitles)=>{
             "is_safe": false,
             "final_score": 2
         }
+<<<<<<< HEAD
+=======
+		res.scoring = scoring;
+>>>>>>> 05f23ded... final
 	} else {
 		// scoring  = await getScoring(subtitles);
 		// console.log(scoring);
 		// if(scoring){
+<<<<<<< HEAD
 		// 	res.scoring = scoring;
+=======
+		//	res.scoring = scoring;
+>>>>>>> 05f23ded... final
 		// }
 	}
+
 	res = new subtitleModel(res);
 	await res.save()
 
@@ -103,6 +112,7 @@ const upsertYoutubeStreamers = async (inputUrl) => {//
 	if (video == null) {
 		try {
 			let urls = null;
+			videoData.parsedSubtitles = [];		
 			if(videoData.subtitles){
 				urls = videoData.subtitles.en ?? videoData.automatic_captions.en ?? null;
 			}
@@ -120,7 +130,11 @@ const upsertYoutubeStreamers = async (inputUrl) => {//
 					videoData.parsedSubtitles = captionJson;
 				} catch (error) {
 					// console.log(error);
+<<<<<<< HEAD
 					videoData.parsedSubtitles = [];					
+=======
+								
+>>>>>>> 05f23ded... final
 				}
 		
 			}
