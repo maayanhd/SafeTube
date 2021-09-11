@@ -13,12 +13,10 @@ const useStyles = makeStyles({
     }
 });
 
-const VideoViewsAndLikes = ({ videoDetailsDisplay, views, likes, dislikes }) => {
-    const [likeAmount, setLikeBarAmount] = useState(likes);
-    const [disLikeAmount, setDisLikeBarAmount] = useState(dislikes);
+const VideoViewsAndLikes = ({ videoDetailsDisplay, currVideoViews, currVideoLikes, currVideoDislikes }) => {
 
 
-    let likeBarAmount = ((likes) / (likes + dislikes)) * 150;
+    let likeBarAmount = ((currVideoLikes) / (currVideoLikes + currVideoDislikes)) * 150;
     let disLikeBarAmount = 150 - likeBarAmount;
 
     const classes = useStyles();
@@ -27,17 +25,17 @@ const VideoViewsAndLikes = ({ videoDetailsDisplay, views, likes, dislikes }) => 
         <div className={videoDetailsDisplay} >
             <span className="left">
                 <h4>
-                    {views + " Views"}
+                    {currVideoViews + " Views"}
                 </h4>
             </span>
             <span className="right">
                 <h4>
-                    <Tooltip title={"Likes: " + likeAmount}>
+                    <Tooltip title={"Likes: " + currVideoLikes}>
                         <IconButton aria-label="delete" color="primary" className={classes.root} size="small">
                             <div className="likeBar" style={{ width: likeBarAmount }}></div>
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title={"Dislikes: " + disLikeAmount}>
+                    <Tooltip title={"Dislikes: " + currVideoDislikes}>
                         <IconButton aria-label="delete" color="primary" className={classes.root} size="small">
                             <div className="disLikeBar" style={{ width: disLikeBarAmount }}></div>
                         </IconButton>

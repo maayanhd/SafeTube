@@ -6,19 +6,23 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 
 const KEY = 'AIzaSyCuVFHDltJZeTbesYt0J2eodWwwfqkpELA';
 
-const resultsFromPlaylist = "50";
+const resultsFromPlaylist = "40";
 
 let currentPlaylist = [];
 
 
 class video {
-    constructor(videoName, description, channelName, imgURL, rating, id) {
+    constructor(videoName, channelName, imgURL, rating, id, like, dislike , views, chBadVidAmount,chGoodVidAmount) {
         this.videoName = videoName;
-        this.description = description;
         this.channelName = channelName;
         this.imgURL = imgURL;
         this.rating = rating;
         this.id = id;
+        this.like = like;
+        this.dislike = dislike;
+        this.views = views;
+        this.chBadVidAmount = chBadVidAmount;
+        this.chGoodVidAmount = chGoodVidAmount;
     }
     getName() {
         return (this.videoName);
@@ -45,17 +49,33 @@ const Form = ({ setCurrentVideoIndexInPlaylist, getIDFromURL, setVideoPlaylist, 
     };
     const placeSingleVideoIntoPlaylist = async () => {
         try {
+            setLoading(false);
             const res = await fetch(
-                "https://youtube.googleapis.com/youtube/v3/videos?id=" + getIDFromURL(firstVideoURL) + "&part=snippet&fields=items%2Fsnippet(title%2Cdescription%2CchannelTitle)&key=AIzaSyD5aoCjGplRER2cPriT28Osh7McTSW6QDk",
-                { method: "GET" }
+                "http://localhost:8082/api/v1/youtube/video?videoid=" + getIDFromURL(firstVideoURL) ,
+                
+                { method: "GET"  }
             );
             const data = await res.json(); // turns the reponse data to a json object
+            setLoading(true);
+            setChannelDetailsDisplay("channelDetails");
+            console.log(data);
             currentPlaylist = [];
             setVideoPlaylist([]);
-            currentPlaylist.push(new video(data.items[0].snippet.title, data.items[0].snippet.description, data.items[0].snippet.channelTitle, "none", "9", getIDFromURL(firstVideoURL)));
+            if(data.scoring.final_score == undefined){
+                data.scoring = data.scoring[0];
+            }
+            currentPlaylist.push(new video(data.title, data.uploader, 
+            data.thumbnail, data.scoring.final_score,
+            data.display_id, data.like_count,
+            data.dislike_count, data.view_count,
+            data.channelScore.badVideoCount,data.channelScore.goodVideoCount));
+            console.log(currentPlaylist);
             setVideoPlaylist(currentPlaylist);
         } catch (err) {
             console.log(err);
+            setErrMSG("Something went wrong.");  
+            setValidURL("validURLSeen");
+            hidePlayer();
         }
     }
 
@@ -64,10 +84,7 @@ const Form = ({ setCurrentVideoIndexInPlaylist, getIDFromURL, setVideoPlaylist, 
         if (isURLValid()) {
             setPlayBoxVisual("playerBox");
             setvideoDetailsDisplay("videoDetails");
-/*             if (firstVideoURL.length > 0 ) {
-                setChannelDetailsDisplay("channelDetails");
-                setvideoDetailsDisplay("videoDetails");
-            }   */
+
             //this finds the start and end of playlist ID
             startOfPlayListIDIndex = firstVideoURL.indexOf('list=') + 5;
             endOfPlayListID = firstVideoURL.length;
@@ -127,19 +144,30 @@ const Form = ({ setCurrentVideoIndexInPlaylist, getIDFromURL, setVideoPlaylist, 
                 setChannelDetailsDisplay("channelDetails");
                 setvideoDetailsDisplay("videoDetails");
                 setSuggestedVideosVisual("playlistTable");
+                
                 console.log(data);
+            
                 currentPlaylist=[];
-                for (var i = 0; i < Math.min(resultsFromPlaylist - "0", data.items.length); i++) {
-                    if(data.items[i].snippet.title !=="Private video"){
+                for (var i = 0; i < Math.min(resultsFromPlaylist - "0", data.length); i++) {
+                    if(data.title !=="Private video"){
+                        if(data[i] != null){
+                            if(data[i].scoring.final_score == undefined){
+                                data[i].scoring = data[i].scoring[0];
+                            }
+                            let vid = new video(data[i].title, data[i].uploader, 
+                                data[i].thumbnail, data[i].scoring.final_score,
+                                data[i].display_id, data[i].like_count,
+                                data[i].dislike_count, data[i].view_count,
+                                data[i].channelScore.badVideoCount,data[i].channelScore.goodVideoCount);
+                            console.log(vid);
+                            console.log(i);
+                            
+                            currentPlaylist.push(vid);
+                        }
                         
-                        let vid = new video(data.items[i].snippet.title, data.items[i].snippet.description,
-                             data.items[i].snippet.videoOwnerChannelTitle, data.items[i].snippet.thumbnails.medium.url,
-                              "7", data.items[i].snippet.resourceId.videoId);
-
-                        currentPlaylist.push(vid);
+                        
                     }
                 }
-                currentPlaylist[1].rating="6";
                 setVideoPlaylist(currentPlaylist);
             } catch (error) {
                 console.log(error);

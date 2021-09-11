@@ -39,7 +39,7 @@ const VideoNameAndRating = ({ videoDetailsDisplay, videoPlaylist, currentVideoIn
             if (videoPlaylist[currentVideoIndexInPlaylist].rating > 8.5) {
                 setRatingVisual("greenRatingVisual");
             } else {
-                if (videoPlaylist[currentVideoIndexInPlaylist].rating > 6.5) {
+                if (videoPlaylist[currentVideoIndexInPlaylist].rating > 5.5) {
                     setRatingVisual("orangeRatingVisual");
                 }else{
                     setRatingVisual("redRatingVisual");

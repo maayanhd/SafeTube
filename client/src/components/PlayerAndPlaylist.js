@@ -9,7 +9,7 @@ import SuggestedVideo from './SuggestedVideo';
 const PlayerAndPlaylist = ({ currentVideoId, setCurrentVideoId, currentVideoIndexInPlaylist,
     setCurrentVideoIndexInPlaylist, videoPlaylist, playBoxVisual, suggestedPlaylistVideos,
     setSuggestedPlaylistVideos, suggestedVideosVisual, channelDetailsDisplay, playerVisual, setPlayerVisual,
-    currVideoIMG, setCurrVideoIMG}) => {
+    currVideoIMG, setCurrVideoIMG, setCurrVideoLikes, setCurrVideoDislikes, setCurrVideoViews}) => {
 
 
     const [badVideoIMG,setBadVideoIMG] = useState("badVideoIMGHidden");    
@@ -23,12 +23,18 @@ const PlayerAndPlaylist = ({ currentVideoId, setCurrentVideoId, currentVideoInde
     useEffect(() => {
 
         if (videoPlaylist.length > currentVideoIndexInPlaylist) {
-            if(videoPlaylist[currentVideoIndexInPlaylist].rating >= "7"){
+            setCurrVideoLikes(videoPlaylist[currentVideoIndexInPlaylist].like);
+            setCurrVideoDislikes(videoPlaylist[currentVideoIndexInPlaylist].dislike);
+            setCurrVideoViews(videoPlaylist[currentVideoIndexInPlaylist].views);
+            if(videoPlaylist[currentVideoIndexInPlaylist].rating >= "6"){
                 setCurrVideoIMG("");
                 setBadVideoIMG("badVideoIMGHidden");
                 setPlayerVisual("playerVisual");
                 setCurrentVideoId(videoPlaylist[currentVideoIndexInPlaylist].id);
+
+           
             }else{
+          
                 setCurrVideoIMG(videoPlaylist[currentVideoIndexInPlaylist].imgURL);
                 setPlayerVisual("playerVisualHidden");
                 setBadVideoIMG("badVideoIMG");
