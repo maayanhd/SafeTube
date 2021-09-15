@@ -57,11 +57,11 @@ const saveSubtitlesToDB = asyncHandler(async (subtitles)=>{
         }
 		res.scoring = scoring;
 	} else {
-		// scoring  = await getScoring(subtitles);
-		// console.log(scoring);
-		// if(scoring){
-		// 	res.scoring = scoring;
-		// }
+		scoring  = await getScoring(subtitles);
+		console.log(scoring);
+		if(scoring){
+			res.scoring = scoring;
+		}
 	}
 
 	res = new subtitleModel(res);
