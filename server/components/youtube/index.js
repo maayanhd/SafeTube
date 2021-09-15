@@ -114,8 +114,8 @@ const upsertYoutubeStreamers = async (inputUrl) => {//
 				const firstUrl = urls[0].url;
 				try {
 					let captionJson = await fetch(firstUrl).then(res => res.text()).then(res=> {
-						console.log("debug\n\n\n\n");
-						console.log(res);
+						// console.log("debug\n\n\n\n");
+						// console.log(res);
 						return xmlParser.xml2json(res, {compact: true, spaces: 4})
 					})
 					captionJson = JSON.parse(captionJson);
@@ -206,13 +206,20 @@ const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
 
 	let playlistVideoIds = playlist.items.map(e=>e.snippet.resourceId.videoId);
 	let promiseArr = [];
+	result = [];
 	for (let index = 0; index < playlistVideoIds.length; index++) {
 		const element = playlistVideoIds[index];
 		promiseArr.push(upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${element}`));
 	}
-	result = await Promise.all(promiseArr);
+	for (let index = 0; index < promiseArr.length; index+=9) {
+		result.push(...await Promise.all(promiseArr.slice(index, Math.min(promiseArr.length-index,9) ) ) )
+		
+	}
+	// result = await Promise.all(promiseArr);
+	// res.send(result);
 	// console.log(result[0]);
 	res.send(result);
+	// console.log(result[0]);
 	
 });
 
@@ -242,9 +249,9 @@ const appendRatePerChannel = async (videoObj) => {
 
 (async()=>{
 	setTimeout(async () => {
-		const subtitleModel = await Database.subtitles();
-		let x = await subtitleModel.find({'title' : { "$regex": "Tyler", "$options": "i" }});
-		console.log(x.map(x=> x.id));
+		// const subtitleModel = await Database.subtitles();
+		// let x = await subtitleModel.find({'title' : { "$regex": "Tyler", "$options": "i" }});
+		// console.log(x.map(x=> x.id));
 		// x = x.map(x => x.scoring)
 		// await fetchYoutubePlaylist("https://www.youtube.com/watch?v=lVKk__uuIxo&list=PLF7tUDhGkiCk_Ne30zu7SJ9gZF9R9ZruE")
 		// const foo = [1, 2, 3];
@@ -260,6 +267,11 @@ const appendRatePerChannel = async (videoObj) => {
 		// const streamersModel = await Database.streamers();
 		// let streamer = new streamersModel({name : "MoryZz",platform:{name : "twitch",id: 1234}})
 		// await streamer.save();
+		// x = [1,2,3,4,5,6,7,8,9,10,11,12]
+		// x.slice(2,4).map(x=>x+1)
+		// console.log(x.slice(2,4));
+		// console.log(x);
+
 	}, 10000);
 	
 })();
