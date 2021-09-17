@@ -47,27 +47,31 @@ const saveSubtitlesToDB = asyncHandler(async (subtitles)=>{
 	});
 	//Here
 	console.log("trying to get scoring");
-	let scoring = {};
-	if (subtitles.parsedSubtitles.length == 0) {
-        scoring = {
-            "bracket_count": 0,
-            "contains_bad_language": true,
-            "is_safe": false,
-            "final_score": 2
-        }
-		res.scoring = scoring;
-	} else {
-		scoring  = await getScoring(subtitles);
-		console.log(scoring);
-		if(scoring){
-			res.scoring = scoring;
-		}
-	}
-
+	// let scoring = {};
+	// if (subtitles.parsedSubtitles.length == 0) {
+    //     scoring = {
+    //         "bracket_count": 0,
+    //         "contains_bad_language": true,
+    //         "is_safe": false,
+    //         "final_score": 2
+    //     }
+	// 	res.scoring = scoring;
+	// } else {
+	// 	scoring  = await getScoring(subtitles);
+	// 	console.log(scoring);
+	// 	if(scoring){
+	// 		res.scoring = scoring;
+	// 	}
+	// }
+	
+	res.scoring = await getScoring(subtitles);
+	console.log("res.scoring");
+	console.log(res.scoring);
 	res = new subtitleModel(res);
-	await res.save()
 
+	await res.save()
 	console.log('saved');
+
 	return res;
   
 });
@@ -92,8 +96,8 @@ const upsertYoutubeStreamers = async (inputUrl) => {//
 			youtubeSkipDashManifest: true,
 			referer: inputUrl
 		})
-		console.log("videoData\n");
-		console.log(videoData);
+		// console.log("videoData\n");
+		// console.log(videoData);
 	} catch (error) {
 		console.log(error.stderr);
 		return;
@@ -106,8 +110,12 @@ const upsertYoutubeStreamers = async (inputUrl) => {//
 		try {
 			let urls = null;
 			videoData.parsedSubtitles = [];		
-			if(videoData.subtitles){
-				urls = videoData.subtitles.en ?? videoData.automatic_captions.en ?? null;
+			if(videoData.subtitles || videoData.automatic_captions){
+				try {
+					urls = videoData.subtitles.en ?? videoData.automatic_captions.en ?? null;
+				} catch (error) {
+					console.log("no english subtitles");
+				}
 			}
 			if(urls){
 				urls = urls.filter(e=>e.ext.includes('srv'));
@@ -133,24 +141,36 @@ const upsertYoutubeStreamers = async (inputUrl) => {//
 			return;
 		}
 	}
-	video["channelScore"] =  await appendRatePerChannel(video);
+	// video["channelScore"] =  await appendRatePerChannel(video);
 	return video;
 };
 const getScoring = async (videoData) =>{
-	const url = "http://localhost:8081";
-	return fetch(url, {
-    method: 'POST',
-    body: JSON.stringify(videoData),
-    headers: { 'Content-Type': 'application/json' }
-	}).then(res => res.text()).then(json => {
-		let result = null;
+	let result = {
+		"bracket_count": 0,
+		"contains_bad_language": true,
+		"is_safe": false,
+		"final_score": 2
+	};
+	if (videoData.parsedSubtitles && videoData.parsedSubtitles.length > 0) {
+ 		const url = "http://localhost:8081";
 		try {
-			result = JSON.parse(json);
+			await fetch(url, {
+			method: 'POST',
+			body: JSON.stringify(videoData),
+			headers: { 'Content-Type': 'application/json' }
+			}).then(res => res.text()).then(json => {
+				try {
+					result = JSON.parse(json);
+				} catch (error) {
+					console.log("Bad result from scoring server\n" + error);
+				}
+			})	
 		} catch (error) {
-			console.log("Bad result from scoring server\n" + error);
+			console.log(error);			
 		}
-		return result;
-	});
+	}
+
+	return result;
 };
 
 const getTranscripts = async (videoIdArray) =>{
@@ -215,11 +235,29 @@ const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
 		result.push(...await Promise.all(promiseArr.slice(index, Math.min(promiseArr.length-index,9) ) ) )
 		
 	}
+	for (let index = 0; index < result.length; index++) {
+		if (result[index]) {
+			result[index]["channelScore"] =  await appendRatePerChannel(result[index]);
+		}
+		
+	}
+	
 	// result = await Promise.all(promiseArr);
 	// res.send(result);
 	// console.log(result[0]);
+	
 	res.send(result);
-	// console.log(result[0]);
+	
+	// console.log(result.map(x=>{
+	// 	if(x){
+	// 		return {
+	// 			channelScore : x.channelScore,
+	// 			display_id : x.display_id
+	// 		}
+	// 	}else{
+	// 		return null
+	// 	}
+	// }));
 	
 });
 
@@ -249,8 +287,32 @@ const appendRatePerChannel = async (videoObj) => {
 
 (async()=>{
 	setTimeout(async () => {
+		// urls = "blabla"
+		// videoData = {
+		// 	subtitles : {
+		// 		dx : "sub en"
+		// 	}
+		// }
+		// try {
+		// 	urls = videoData.subtitles.en ?? videoData.automatic_captions.en ?? null;
+		// } catch (error) {
+		// 	console.log(error);
+		// }
+		// console.log(urls);
+
+
 		// const subtitleModel = await Database.subtitles();
-		// let x = await subtitleModel.find({'title' : { "$regex": "Tyler", "$options": "i" }});
+		// await subtitleModel.updateMany({'scoring' : null},{'scoring' : {
+		// 	bracket_count : 0,
+		// 	contains_bad_language : true,
+		// 	is_safe : false,
+		// 	final_score : 6
+		// }})
+		// let x = await subtitleModel.find({'scoring' : null});
+		// // let x = await subtitleModel.find({'uploader' : { "$regex": "jxdn", "$options": "i" },"scoring.final_score" : {$gte : 6}});
+		// console.log(x.length);
+
+
 		// console.log(x.map(x=> x.id));
 		// x = x.map(x => x.scoring)
 		// await fetchYoutubePlaylist("https://www.youtube.com/watch?v=lVKk__uuIxo&list=PLF7tUDhGkiCk_Ne30zu7SJ9gZF9R9ZruE")
@@ -268,11 +330,17 @@ const appendRatePerChannel = async (videoObj) => {
 		// let streamer = new streamersModel({name : "MoryZz",platform:{name : "twitch",id: 1234}})
 		// await streamer.save();
 		// x = [1,2,3,4,5,6,7,8,9,10,11,12]
+		// result = []
+		// for (let index = 0; index < x.length; index+=9) {
+		// 	result.push(...x.slice(index, index + Math.min(x.length-index,9) ) )
+			
+		// }
+		// console.log(result);
 		// x.slice(2,4).map(x=>x+1)
 		// console.log(x.slice(2,4));
 		// console.log(x);
 
-	}, 10000);
+	}, 1000);
 	
 })();
 
