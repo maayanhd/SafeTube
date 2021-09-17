@@ -40,7 +40,7 @@ const ChannelDetails = ({ videoPlaylist, currentVideoIndexInPlaylist, channelDet
             setGoodVidNum(videoPlaylist[currentVideoIndexInPlaylist].chGoodVidAmount);
             setChPop(0);
         }
-    },[videoPlaylist])
+    },[videoPlaylist,currentVideoIndexInPlaylist])
 
     useEffect(() => {
         if (videoPlaylist.length > currentVideoIndexInPlaylist) {
