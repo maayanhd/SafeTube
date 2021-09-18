@@ -160,7 +160,7 @@ const getScoring = async (videoData) =>{
 			headers: { 'Content-Type': 'application/json' }
 			}).then(res => res.text()).then(json => {
 				try {
-					result = JSON.parse(json);
+					result = JSON.parse(json)[0];
 				} catch (error) {
 					console.log("Bad result from scoring server\n" + error);
 				}
@@ -232,7 +232,7 @@ const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
 		promiseArr.push(upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${element}`));
 	}
 	for (let index = 0; index < promiseArr.length; index+=9) {
-		result.push(...await Promise.all(promiseArr.slice(index, Math.min(promiseArr.length-index,9) ) ) )
+		result.push(...await Promise.all(promiseArr.slice(index, index + Math.min(promiseArr.length-index,9) ) ) )
 		
 	}
 	for (let index = 0; index < result.length; index++) {
