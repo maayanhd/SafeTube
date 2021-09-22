@@ -31,7 +31,12 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         self.data_string = self.rfile.read(int(self.headers['Content-Length']))
         data = simplejson.loads(self.data_string)
         # print(data)
-        scoring_videos_RDD = get_scoring_videos_RDD(data)
+        if isinstance(data, type(list)):
+            formed_data = data
+        else:
+            formed_data = [data]
+
+        scoring_videos_RDD = get_scoring_videos_RDD(formed_data)
         updated_model_decision_RDD = get_model_decision_RDD(scoring_videos_RDD)
         updated_model_decision_df = updated_model_decision_RDD.toDF(['id', 'bracket_count', 'contains_bad_language',
                                                                      'is_safe', 'final_score'])
@@ -70,8 +75,7 @@ def get_videos_id_bracket_count_and_is_containing_bad_words_RDD(videos_collectio
     videos_id_bracket_count_RDD.cache()
     '''returning objects in this format- (id, bracket count, containing bad language, isSafePrediction, 
     final_scoring) '''
-    # id_and_scoring_tuple[1,2] -> prediction, id_and_scoring_tuple[1,3] - final scoring
-    show_RDD(videos_id_bracket_count_RDD)
+    # show_RDD(videos_id_bracket_count_RDD)
     return videos_id_bracket_count_RDD
 
 
@@ -91,25 +95,9 @@ def get_video_bracket_count_and_are_bad_words_contained(subtitles_lst, bad_wordi
                                       for bad_word in bad_wording_list if
                                       re.search(rf'\b{bad_word}\b', line) is not None and line is not None)
         # Debugging located bad words
-        # [(i, len(re.findall(rf'\b{bad_word}\b', line)), bad_word, line) for i, line in enumerate(subtitles_lst) for
-        #  bad_word in bad_wording_list if len(re.findall(bad_word, line)) != 0]
+        print(*[(i, len(re.findall(rf'\b{bad_word}\b', line)), bad_word, line) for i, line in enumerate(subtitles_lst) for
+         bad_word in bad_wording_list if len(re.findall(rf'\b{bad_word}\b', line)) != 0], end='\n')
 
-        # words_lists = [line.split(" ") if line is not None else "" for line in subtitles_lst]
-        # # Assuming almost no words containing '__' but the '[ __ ]' after splitting by ' ' that
-        # # indicates there has been a bad word in the same place marked with this sequence of characters.
-        # if len(words_lists) != 0 and words_lists is not None:
-        #     # Checks whether there is a bad word for the bad word list appeared in the list of words
-        #     # of the current transcript
-        #     flattened_words_list = [word for words_lst in words_lists for word in words_lst]
-        #     are_bad_words_contained = any(bad_word in flattened_words_list for bad_word in bad_wording_list)
-        #     bad_words_count_prep = [[int(1) if word == "__" else int(0) for word in words_lst]
-        #                             for words_lst in words_lists]
-        #     # print(*bad_words_count_prep, end='\n')
-        #     # print(str(len(bad_words_count_prep)) + '\n')
-        #     # Appending bracket counting lists an the counting the number of brackets in total (summing 0's and 1's)
-        #     if len(bad_words_count_prep) != 0 and bad_words_count_prep is not None:
-        #         bad_words_count = functools.reduce(lambda a, b: a + b,
-        #                                            functools.reduce(lambda a, b: a + b, bad_words_count_prep))
     print(f'count is {bad_words_count}\n')
     print(f'contains bad words: {are_bad_words_contained}\n')
 
@@ -327,7 +315,6 @@ class AdaBoost:
         #  ------------------------Decision Trees Classifiers only------------------------------------
         self.errors = None
         self.sample_weights = None
-
 
     @staticmethod
     def _check_X_y(X, y):
