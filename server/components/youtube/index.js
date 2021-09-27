@@ -312,8 +312,10 @@ const fetchYoutubeVideo = asyncHandler(async (req, res) => {
 	const videoID = req.query.videoid ?? null;
 	let result = {status : 500 , data : null};
 	if(videoID) {
-		
-		upsertResult = await upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${videoID}`,videoID);
+		upsertResult = [await upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${videoID}`,videoID)];
+		upsertResult = await getMultipleSubtitleScoring(upsertResult);
+		upsertResult = await saveSubtitlesToDB(upsertResult);
+		upsertResult = await fetchAndAttachChannelScoring(upsertResult)
 		if(upsertResult){
 			result = upsertResult; 
 		}
@@ -322,13 +324,10 @@ const fetchYoutubeVideo = asyncHandler(async (req, res) => {
 });
 
 const appendRatePerChannel = async (channel_id,subtitleModel) => { 
-	
 	let channelVideos = await subtitleModel.find({channel_id : channel_id});
-	
 	let goodVideoCount = channelVideos.filter((videoObj)=>{
 		return videoObj.scoring.final_score >= 6;
 	  }).length;
-
 	return {
 		channel_id : channel_id,
 		goodVideoCount :  goodVideoCount,
@@ -336,66 +335,6 @@ const appendRatePerChannel = async (channel_id,subtitleModel) => {
     };
 };
 
-(async()=>{
-	setTimeout(async () => {
-		// urls = "blabla"
-		// videoData = {
-		// 	subtitles : {
-		// 		dx : "sub en"
-		// 	}
-		// }
-		// try {
-		// 	urls = videoData.subtitles.en ?? videoData.automatic_captions.en ?? null;
-		// } catch (error) {
-		// 	console.log(error);
-		// }
-		// console.log(urls);
-
-
-		// const subtitleModel = await Database.subtitles();
-		// let video = await subtitleModel.find({ id: 'QRISgYcPvvY' });
-		// console.log(video.length);
-		// await subtitleModel.deleteMany({'channel_id' : "UC6LEH0rS9V0BF5aNhVYdykQ"})//,{'scoring' : {
-		// 	bracket_count : 0,
-		// 	contains_bad_language : true,
-		// 	is_safe : false,
-		// 	final_score : 6
-		// }})
-		// let x = await subtitleModel.find({'scoring' : null});
-		// // let x = await subtitleModel.find({'uploader' : { "$regex": "jxdn", "$options": "i" },"scoring.final_score" : {$gte : 6}});
-		// console.log(x.length);
-
-
-		// console.log(x.map(x=> x.id));
-		// x = x.map(x => x.scoring)
-		// await fetchYoutubePlaylist("https://www.youtube.com/watch?v=lVKk__uuIxo&list=PLF7tUDhGkiCk_Ne30zu7SJ9gZF9R9ZruE")
-		// const foo = [1, 2, 3];
-		// const [n] = foo;
-		// console.log(n);
-		// console.log(await getAllTranscripts());
-		
-		// console.log("starting");
-		// await upsertYoutubeStreamers("https://www.youtube.com/watch?v=5sTWbG3n8wU");
-		// initYouTubeAPI();
-		// 
-		// console.log("video");
-		// const streamersModel = await Database.streamers();
-		// let streamer = new streamersModel({name : "MoryZz",platform:{name : "twitch",id: 1234}})
-		// await streamer.save();
-		// x = [1,2,3,4,5,6,7,8,9,10,11,12]
-		// result = []
-		// for (let index = 0; index < x.length; index+=9) {
-		// 	result.push(...x.slice(index, index + Math.min(x.length-index,9) ) )
-			
-		// }
-		// console.log(result);
-		// x.slice(2,4).map(x=>x+1)
-		// console.log(x.slice(2,4));
-		// console.log(x);
-
-	}, 10000);
-	
-})();
 
 module.exports = {
 	upsertYoutubeStreamers: upsertYoutubeStreamers,
