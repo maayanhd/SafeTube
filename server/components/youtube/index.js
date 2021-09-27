@@ -48,7 +48,11 @@ const saveSubtitlesToDB = asyncHandler(async (subtitlesArr)=>{
 		resArr.push(res);
 		
 	}
-	await Promise.all(resSavePromiseArr);
+	try {
+		await Promise.all(resSavePromiseArr);
+	} catch (error) {
+		console.log("somthing went wrong with saving to DB");		
+	}
 	return resArr;
 	
 });
@@ -302,13 +306,20 @@ const fetchAndAttachChannelScoring = async(videoObjArr)=>{
 const fetchYoutubeVideo = asyncHandler(async (req, res) => {
 	const videoID = req.query.videoid ?? null;
 	let result = {status : 500 , data : null};
+	const subtitleModel = await Database.subtitles();
+
 	if(videoID) {
-		upsertResult = [await upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${videoID}`,videoID)];
-		upsertResult = await getMultipleSubtitleScoring(upsertResult);
-		upsertResult = await saveSubtitlesToDB(upsertResult);
-		upsertResult = await fetchAndAttachChannelScoring(upsertResult)
-		if(upsertResult){
-			result = upsertResult[0]; 
+		let dbVideo = await subtitleModel.findOne({id : videoID})
+		if(dbVideo){
+			result = dbVideo;	
+		} else {
+			upsertResult = [await upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${videoID}`,videoID)];
+			upsertResult = await getMultipleSubtitleScoring(upsertResult);
+			upsertResult = await saveSubtitlesToDB(upsertResult);
+			upsertResult = await fetchAndAttachChannelScoring(upsertResult)
+			if(upsertResult){
+				result = upsertResult[0]; 
+			}
 		}
 	}
 	res.send(result);
@@ -326,10 +337,6 @@ const appendRatePerChannel = async (channel_id,subtitleModel) => {
     };
 };
 
-(async()=>{
-	let channelVideos = await subtitleModel.find({channel_id : channel_id});
-
-})();
 module.exports = {
 	upsertYoutubeStreamers: upsertYoutubeStreamers,
 	getAllTranscripts: getAllTranscripts,
