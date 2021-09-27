@@ -7,13 +7,6 @@ const youtubedl = require('youtube-dl-exec')
 const fetch = require('node-fetch');
 const xmlParser = require('xml-js');
 
-// const initYouTubeAPI = () => {
-// 	return google.youtube({
-// 		version: 'v3',
-// 		auth: 'AIzaSyCWQYCbkfQfSRxvakEBpqM8Z8CN2kD1Qvk',
-// 	});
-// };
-
 /**
  * Handles online & offline streamers iteration number and schedule according to status
  * @param {Number} updateIteration the last update iteration
@@ -234,17 +227,14 @@ const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
 	let playlistVideoIds = playlist.items.map(e=>e.snippet.resourceId.videoId);
 	let videoDataPromiseArr = [];
 	result = [];
-	
-	for (let index = 0; index < playlistVideoIds.length; index++) {
-		const element = playlistVideoIds[index];
-		let video = await subtitleModel.findOne({id : element});
-		if (video) {
-			console.log("video found in the DB");
-			result.push(video);
-		} else {
-			console.log("video currently not in the DB");
-			videoDataPromiseArr.push(upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${element}`,element));
-		}
+	let foundVideos = await subtitleModel.find({id : {$in : playlistVideoIds}});
+	result.push(...foundVideos)
+	let difference = playlistVideoIds.filter(x => !foundVideos.map(x=>x.id).includes(x));
+	for (let index = 0; index < difference.length; index++) {
+		const element = difference[index];
+		console.log("video currently not in the DB");
+		videoDataPromiseArr.push(upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${element}`,element));
+		
 	}
 	if (videoDataPromiseArr.length > 0) {
 		console.log("in hereeeeeeeeeee");
@@ -253,8 +243,9 @@ const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
 		videoDataArr = await saveSubtitlesToDB(videoDataArr);
 		result.push(...videoDataArr);
 	}
-
+	console.log("started to work on channel scoring");
 	result = await fetchAndAttachChannelScoring(result);
+	console.log("finished to work on channel scoring ");
 
 	res.send(result);
 });
@@ -317,7 +308,7 @@ const fetchYoutubeVideo = asyncHandler(async (req, res) => {
 		upsertResult = await saveSubtitlesToDB(upsertResult);
 		upsertResult = await fetchAndAttachChannelScoring(upsertResult)
 		if(upsertResult){
-			result = upsertResult; 
+			result = upsertResult[0]; 
 		}
 	}
 	res.send(result);
@@ -335,7 +326,10 @@ const appendRatePerChannel = async (channel_id,subtitleModel) => {
     };
 };
 
+(async()=>{
+	let channelVideos = await subtitleModel.find({channel_id : channel_id});
 
+})();
 module.exports = {
 	upsertYoutubeStreamers: upsertYoutubeStreamers,
 	getAllTranscripts: getAllTranscripts,
