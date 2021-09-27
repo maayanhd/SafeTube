@@ -315,7 +315,7 @@ const fetchYoutubeVideo = asyncHandler(async (req, res) => {
 		} else {
 			upsertResult = [await upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${videoID}`,videoID)];
 			upsertResult = await getMultipleSubtitleScoring(upsertResult);
-			upsertResult = await saveSubtitlesToDB(upsertResult);
+			result = await saveSubtitlesToDB(upsertResult);
 			
 		}
 	}
