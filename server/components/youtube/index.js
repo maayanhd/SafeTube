@@ -311,17 +311,18 @@ const fetchYoutubeVideo = asyncHandler(async (req, res) => {
 	if(videoID) {
 		let dbVideo = await subtitleModel.findOne({id : videoID})
 		if(dbVideo){
-			result = dbVideo;	
+			result = [dbVideo];	
 		} else {
 			upsertResult = [await upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${videoID}`,videoID)];
 			upsertResult = await getMultipleSubtitleScoring(upsertResult);
 			upsertResult = await saveSubtitlesToDB(upsertResult);
-			upsertResult = await fetchAndAttachChannelScoring(upsertResult)
-			if(upsertResult){
-				result = upsertResult[0]; 
-			}
+			
 		}
 	}
+	console.log("started to work on channel scoring");
+	result = await fetchAndAttachChannelScoring(result);
+	console.log("finished to work on channel scoring ");
+	result = result[0];
 	res.send(result);
 });
 
