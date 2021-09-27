@@ -33,47 +33,31 @@ const cleanSubtitles = (subtitles)=>{
  * @param {Number} updateIteration the last update iteration
  * @param {String} platformName
  */
-const saveSubtitlesToDB = asyncHandler(async (subtitles)=>{
+const saveSubtitlesToDB = asyncHandler(async (subtitlesArr)=>{
 	const subtitleModel = await Database.subtitles();
 	const whiteList = Object.keys(subtitleModel.schema.obj);
-	const subtitlesKeys = Object.keys(subtitles)
-	let res = {};
-	// iterate over each keys of source
-	whiteList.forEach((key) => {
-	  // if whiteList contains the current key, add this key to res
-	  if (key != "thumbnail" || subtitlesKeys.indexOf(key) !== -1) {
-		res[key] = subtitles[key];
-	  }
-	});
-	//Here
-	console.log("trying to get scoring");
-	// let scoring = {};
-	// if (subtitles.parsedSubtitles.length == 0) {
-    //     scoring = {
-    //         "bracket_count": 0,
-    //         "contains_bad_language": true,
-    //         "is_safe": false,
-    //         "final_score": 2
-    //     }
-	// 	res.scoring = scoring;
-	// } else {
-	// 	scoring  = await getScoring(subtitles);
-	// 	console.log(scoring);
-	// 	if(scoring){
-	// 		res.scoring = scoring;
-	// 	}
-	// }
+	let resArr = [];
+	let resSavePromiseArr = [];
+	for (let index = 0; index < subtitlesArr.length; index++) {
+		const subtitles = subtitlesArr[index];
+		const subtitlesKeys = Object.keys(subtitles)
+		let res = {};
+		// iterate over each keys of source
+		whiteList.forEach((key) => {
+		  // if whiteList contains the current key, add this key to res
+		  if (key != "thumbnail" || subtitlesKeys.indexOf(key) !== -1) {
+			res[key] = subtitles[key];
+		  }
+		});
+		res = new subtitleModel(res);
+		resSavePromiseArr.push(res.save());
+		console.log('saved');
+		resArr.push(res);
+		
+	}
+	await Promise.all(resSavePromiseArr);
+	return resArr;
 	
-	res.scoring = await getScoring(subtitles);
-	console.log("res.scoring");
-	console.log(res.scoring);
-	res = new subtitleModel(res);
-
-	await res.save()
-	console.log('saved');
-
-	return res;
-  
 });
 /**
  * Handles online & offline streamers iteration number and schedule according to status
@@ -81,32 +65,27 @@ const saveSubtitlesToDB = asyncHandler(async (subtitles)=>{
  * @param {String} platformName
  */
 	// const upsertYoutubeStreamers = asyncHandler(async (req, res) => {//
-const upsertYoutubeStreamers = async (inputUrl) => {//
-	const subtitleModel = await Database.subtitles();
+const upsertYoutubeStreamers = async (inputUrl,display_id) => {//
 	let videoData = {};
-	
-	try {
-	
-		videoData = await youtubedl(inputUrl, {
-			dumpJson: true,
-			noWarnings: true,
-			noCallHome: true,
-			noCheckCertificate: true,
-			preferFreeFormats: true,
-			youtubeSkipDashManifest: true,
-			referer: inputUrl
-		})
-		// console.log("videoData\n");
-		// console.log(videoData);
-	} catch (error) {
-		console.log(error.stderr);
-		return;
-
-	}
-	let video = await subtitleModel.findOne({id : videoData.id});
-	
 	//Video not found in DB => parse subtitles and save to DB
-	if (video == null) {
+		try {
+	
+			videoData = await youtubedl(inputUrl, {
+				dumpJson: true,
+				noWarnings: true,
+				noCallHome: true,
+				noCheckCertificate: true,
+				preferFreeFormats: true,
+				youtubeSkipDashManifest: true,
+				referer: inputUrl
+			})
+			// console.log("videoData\n");
+			// console.log(videoData);
+		} catch (error) {
+			console.log(error.stderr);
+			return;
+	
+		}
 		try {
 			let urls = null;
 			videoData.parsedSubtitles = [];		
@@ -135,14 +114,13 @@ const upsertYoutubeStreamers = async (inputUrl) => {//
 				}
 		
 			}
-			video = await saveSubtitlesToDB(videoData);
+			//video = await saveSubtitlesToDB(videoData);
 		} catch (error) {
 			console.log(error);
-			return;
 		}
-	}
+	
 	// video["channelScore"] =  await appendRatePerChannel(video);
-	return video;
+	return videoData;
 };
 const getScoring = async (videoData) =>{
 	let result = {
@@ -170,6 +148,34 @@ const getScoring = async (videoData) =>{
 		}
 	}
 
+	return result;
+};
+const newGetScoring = async (videosData) =>{
+	const url = "http://localhost:8081";
+	let result = videosData.map(x=>{
+		return {
+			id:x.id,
+			"bracket_count": 0,
+			"contains_bad_language": true,
+			"is_safe": false,
+			"final_score": 2
+		}
+	});
+	try {
+		await fetch(url, {
+		method: 'POST',
+		body: JSON.stringify(videosData),
+		headers: { 'Content-Type': 'application/json' }
+		}).then(res => res.text()).then(json => {
+			try {
+				result = JSON.parse(json);
+			} catch (error) {
+				console.log("Bad result from scoring server\n" + error);
+			}
+		})	
+	} catch (error) {
+		console.log(error);			
+	}
 	return result;
 };
 
@@ -205,6 +211,7 @@ const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
 	let result = {status : 500 , data : null};
 	const resultsFromPlaylist = 50;
 	const currentPlaylistID = req.query.playlistid ?? null;
+	const subtitleModel = await Database.subtitles();
 	 if(!currentPlaylistID){
 		 result.data = 'No playlist header field'
 		 res.send(result);
@@ -225,47 +232,88 @@ const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
 	}
 
 	let playlistVideoIds = playlist.items.map(e=>e.snippet.resourceId.videoId);
-	let promiseArr = [];
+	let videoDataPromiseArr = [];
 	result = [];
+	
 	for (let index = 0; index < playlistVideoIds.length; index++) {
 		const element = playlistVideoIds[index];
-		promiseArr.push(upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${element}`));
+		let video = await subtitleModel.findOne({id : element});
+		if (video) {
+			console.log("video found in the DB");
+			result.push(video);
+		} else {
+			console.log("video currently not in the DB");
+			videoDataPromiseArr.push(upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${element}`,element));
+		}
 	}
-	for (let index = 0; index < promiseArr.length; index+=9) {
-		result.push(...await Promise.all(promiseArr.slice(index, index + Math.min(promiseArr.length-index,9) ) ) )
-		
+	if (videoDataPromiseArr.length > 0) {
+		console.log("in hereeeeeeeeeee");
+		videoDataArr = await Promise.all(videoDataPromiseArr);
+		videoDataArr = await getMultipleSubtitleScoring(videoDataArr);
+		videoDataArr = await saveSubtitlesToDB(videoDataArr);
+		result.push(...videoDataArr);
 	}
-	for (let index = 0; index < result.length; index++) {
-		if (result[index]) {
-			result[index]["channelScore"] =  await appendRatePerChannel(result[index]);
+
+	result = await fetchAndAttachChannelScoring(result);
+
+	res.send(result);
+});
+const getMultipleSubtitleScoring = async (videoDataArr)=>{
+	
+	let subsAndIds = videoDataArr.map(video => {
+		return {
+			parsedSubtitles:video.parsedSubtitles,
+			id:video.id
+		}
+	})
+	let multiScoring = await newGetScoring(subsAndIds);
+	videoDataArr.forEach(video => {
+		let scoring = null;
+		try {
+			scoring = multiScoring.find(x=>x.id == video.id);
+		} catch (error) {
+			console.log(error);			
+		}
+		if (scoring) {
+			video.scoring = scoring;
+		}
+
+	});
+
+	return videoDataArr
+	
+}
+const fetchAndAttachChannelScoring = async(videoObjArr)=>{
+	const subtitleModel = await Database.subtitles();
+	let uniqeChannelIdArr = [...new Set(videoObjArr.map(x=>x.channel_id))]
+	for (let index = 0; index < uniqeChannelIdArr.length; index++) {
+		if (uniqeChannelIdArr[index]) {
+			uniqeChannelIdArr[index] = appendRatePerChannel(uniqeChannelIdArr[index],subtitleModel);
 		}
 		
 	}
-	
-	// result = await Promise.all(promiseArr);
-	// res.send(result);
-	// console.log(result[0]);
-	
-	res.send(result);
-	
-	// console.log(result.map(x=>{
-	// 	if(x){
-	// 		return {
-	// 			channelScore : x.channelScore,
-	// 			display_id : x.display_id
-	// 		}
-	// 	}else{
-	// 		return null
-	// 	}
-	// }));
-	
-});
+	uniqeChannelIdArr = await Promise.all(uniqeChannelIdArr);
+
+	for (let index = 0; index < uniqeChannelIdArr.length; index++) {
+		const uniqeChannelScoring = uniqeChannelIdArr[index];
+		videoObjArr.map(x=>{
+			if (x.channel_id == uniqeChannelScoring.channel_id) {
+				x["channelScore"] = uniqeChannelScoring;
+			}
+			return x;
+		})
+		
+	}
+	return videoObjArr;
+};
+
 
 const fetchYoutubeVideo = asyncHandler(async (req, res) => {
 	const videoID = req.query.videoid ?? null;
 	let result = {status : 500 , data : null};
 	if(videoID) {
-		upsertResult = await upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${videoID}`);
+		
+		upsertResult = await upsertYoutubeStreamers(`https://www.youtube.com/watch?v=${videoID}`,videoID);
 		if(upsertResult){
 			result = upsertResult; 
 		}
@@ -273,16 +321,19 @@ const fetchYoutubeVideo = asyncHandler(async (req, res) => {
 	res.send(result);
 });
 
-const appendRatePerChannel = async (videoObj) => { 
-	const subtitleModel = await Database.subtitles();
-	let channelVideos = await subtitleModel.find({channel_id : videoObj.channel_id});
+const appendRatePerChannel = async (channel_id,subtitleModel) => { 
+	
+	let channelVideos = await subtitleModel.find({channel_id : channel_id});
+	
 	let goodVideoCount = channelVideos.filter((videoObj)=>{
 		return videoObj.scoring.final_score >= 6;
 	  }).length;
+
 	return {
+		channel_id : channel_id,
 		goodVideoCount :  goodVideoCount,
 		badVideoCount : channelVideos.length - goodVideoCount
-    }
+    };
 };
 
 (async()=>{
@@ -302,7 +353,9 @@ const appendRatePerChannel = async (videoObj) => {
 
 
 		// const subtitleModel = await Database.subtitles();
-		// await subtitleModel.updateMany({'scoring' : null},{'scoring' : {
+		// let video = await subtitleModel.find({ id: 'QRISgYcPvvY' });
+		// console.log(video.length);
+		// await subtitleModel.deleteMany({'channel_id' : "UC6LEH0rS9V0BF5aNhVYdykQ"})//,{'scoring' : {
 		// 	bracket_count : 0,
 		// 	contains_bad_language : true,
 		// 	is_safe : false,
@@ -340,7 +393,7 @@ const appendRatePerChannel = async (videoObj) => {
 		// console.log(x.slice(2,4));
 		// console.log(x);
 
-	}, 1000);
+	}, 10000);
 	
 })();
 
