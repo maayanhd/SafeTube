@@ -31,7 +31,7 @@
 ## Team members
   #### Big-Data Architecture Project:
 - Ido Kendel
-- Mor
+- Mor Cohen
 - Ma'ayan Hadar
 
 ## Contributing
