@@ -1,0 +1,49 @@
+הסבר כללי:
+ 
+הפרוייקט מורכב מ-3 שרתים - שרת backend ב-Node.js, שרת frontend בReactJS ושרת http בפייתון לצורך חישובים ומתן ציון על סרטון/פלייליסט.
+
+הוראות הפעלה: 
+
+‎‏‎‏1. התקן spark וhadoop (הגרסא העדכנית ביותר) על המחשב (דורש הגדרת environment variables (מצורפות תמונות בתיקייה Environment Variable Images הנמצאת בתיקייה הראשית - SafeTube).
+‎‏2. נווט ל- SafeTube\client בterminal
+  2.1 הרץ npm install 
+  2.2 הרם את שרת הfront עם npm start
+3. נווט ל- SafeTube\Server  בterminal
+ 3.1 הרץ npm install 
+ 3.2 הרם את שרת ה back עם npm start (עדיפות לשימוש ב-terminal של visual studio code - למקרה שport 3000  תפוס)
+4. נווט ל- SafeTube\scoring_videos והרץ את Video_Scoring_System_metadata.py ב-IDE לבחירתך וחכה לחיווי כי השרת רץ (יופיע בקנוסול - server is live).  
+5. שים סרטון/פלייליסט באתר שנפתח וראה את התוצאות.
+
+להלן דוגמאות לסרטונים מסוגים שונים:
+סרטון יחיד עם כתוביות:
+
+https://www.youtube.com/watch?v=O3jYpShpuZQ
+
+https://www.youtube.com/watch?v=9AThycGCakk
+
+https://www.youtube.com/watch?v=IlU-zDU6aQ0
+
+סרטון יחיד בלי כתוביות:
+
+https://www.youtube.com/watch?v=obkrMiyDrbs
+
+https://www.youtube.com/watch?v=f6dnI1WsFrA
+
+https://www.youtube.com/watch?v=-Xb0vKbuwdk
+
+
+פלייליסט עם כתוביות:
+
+https://www.youtube.com/watch?v=hNJnt7fKx4Q&list=PL5A4nPQbUF8Ba_FRHAqLGamIg3ems1DIy&index=1
+
+https://www.youtube.com/watch?v=k3KYZckIPWM&list=PL5A4nPQbUF8Am1h0V70g_lCyVKmqkwJeH&index=1
+
+https://www.youtube.com/watch?v=pp57N5NRfho&list=PL5A4nPQbUF8BIldhfGtEDVSWel6OmFEdC&index=1
+
+פלייליט בלי כתוביות:
+
+https://www.youtube.com/watch?v=LsoLEjrDogU&list=PL2gNzJCL3m_86MVDlCmPdLzTV0I2EWrro&index=1
+
+https://www.youtube.com/watch?v=cSMB63GMfWM&list=PL2gNzJCL3m_-XvenQy5msDmRdjlb5julb&index=1
+
+https://www.youtube.com/watch?v=oacaq_1TkMU&list=PL2gNzJCL3m_95e30XaHaiV-CYEgwAyrb5&index=1

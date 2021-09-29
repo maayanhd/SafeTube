@@ -6,7 +6,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 
 const KEY = 'AIzaSyCuVFHDltJZeTbesYt0J2eodWwwfqkpELA';
 
-const resultsFromPlaylist = "40";
+const resultsFromPlaylist = "50";
 
 let currentPlaylist = [];
 
@@ -120,7 +120,13 @@ const Form = ({ setCurrentVideoIndexInPlaylist, getIDFromURL, setVideoPlaylist, 
                     if (defaultURLString.substring(startVidNumIndex, endVidNumIndex).includes("&")) {
                         endVidNumIndex = defaultURLString.indexOf("&", startVidNumIndex);
                     }
-                    setCurrentVideoIndexInPlaylist(defaultURLString.substring(startVidNumIndex, endVidNumIndex) - "1");
+                    let idx = defaultURLString.substring(startVidNumIndex, endVidNumIndex) - "1";
+                    if(idx<"50"){
+                        setCurrentVideoIndexInPlaylist(idx);
+                    }else{
+                        setCurrentVideoIndexInPlaylist(0);
+                    }
+
                 } else {
                     setCurrentVideoIndexInPlaylist(0);
                 }

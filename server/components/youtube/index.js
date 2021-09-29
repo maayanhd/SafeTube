@@ -255,6 +255,7 @@ const fetchYoutubePlaylist = asyncHandler(async (req, res) => {
 });
 const getMultipleSubtitleScoring = async (videoDataArr)=>{
 	
+	console.log(videoDataArr);
 	let subsAndIds = videoDataArr.map(video => {
 		return {
 			parsedSubtitles:video.parsedSubtitles,
