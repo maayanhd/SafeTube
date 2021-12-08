@@ -17,14 +17,14 @@
    **SafeTube** allows users to keep their kids YouTube content monitored by letting us **filtering videos** by its content and **scoring** to what degree it suits for younger ages
 
 ### Why using us?
-  **The internet is full of harmful and dangerous video content**, and **YouTube** as the most popular online video platform, it definitely one of the biggest sources of this kind of staff. This is where we come to the picture, trust us to do the hard work and by a simple click, we will filter all the bad parts leaving you with videos/playlist purely suits for younger ages.
+  **The internet is full of harmful and dangerous video content**, and **YouTube** as the most popular online video platform, is one of the biggest sources of this kind of staff. This is where we come to the picture, trust us to do the hard work and by a simple click, we will filter all the bad parts leaving you with videos/playlist purely suits for younger ages.
 
 ### Still not convinced?
  As my mom used to say to me as a picky eater- _" try first, and then we'll discuss it, what do you have to lose?"_
 
 
 ## Tools used for Development
-* [MongoDB](https://www.mongodb.com/) - a general-purpose, document-based, distributed database built for modern application developers and for the cloud era.
+* [MongoDB](https://www.mongodb.com/) - a general-purpose, document-based, distributed database built for modern application developers and the cloud era.
 * [Reactjs](https://reactjs.org/) - a JavaScript library for building user interfaces.
 * [Bootstrap](/https://getbootstrap.com/) -  a free and open-source CSS framework directed at responsive, mobile-first front-end web development.
 
